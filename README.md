@@ -7,40 +7,46 @@ The graph is directed and cyclic. The latter property will change in future to a
 # Install
 
 ```bash
-npm install fp-ts fp-ts-graph
+npm install fp-ts git+https://github.com/no-day/fp-ts-graph
 ```
 
 # TypeScript Example
 
-## Imports
+## Define Types
 
 ```ts
+// examples/types.ts
+import { Graph } from "fp-ts-graph";
+
+// First, let's define some custom Id, Edge and Node type for our Graph
+
+export type MyId = number;
+
+export type MyNode = { firstName: string; lastName: string; age: number };
+
+export type MyEdge = { items: number[] };
+
+// With this we can define a customized Graph type
+
+export type MyGraph = Graph<MyId, MyEdge, MyNode>;
+```
+
+## Build Graph
+
+```ts
+// exmaples/build-graph.ts
 import * as graph from "fp-ts-graph";
 import { Graph } from "fp-ts-graph";
 import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
 import { eqNumber } from "fp-ts/lib/Eq";
-```
-
-## Define Types
-
-```ts
-// First, let's define some custom Id, Edge and Node type for our Graph
-type MyId = number;
-
-type MyNode = { firstName: string; lastName: string; age: number };
-
-type MyEdge = { items: number[] };
+import { MyEdge, MyId, MyNode } from "./types";
 
 // With this we can define a customized Graph type
 
 type MyGraph = Graph<MyId, MyEdge, MyNode>;
-```
 
-## Build Graph
-
-```ts
 // To save some wrting, we define partially applied versions of the builder functions
 
 const empty = graph.empty<MyId, MyEdge, MyNode>();
@@ -49,7 +55,7 @@ const insertEdge = graph.insertEdge(eqNumber);
 
 // Then, let's fill the graph with Data.
 
-const myGraph: Option<MyGraph> = pipe(
+export const myGraph: Option<MyGraph> = pipe(
   // We start out with and empty graph.
   empty,
 
@@ -88,6 +94,16 @@ const myGraph: Option<MyGraph> = pipe(
 # Debug graph visually
 
 ```ts
+// examples/debug-visually.ts
+
+import * as graph from "fp-ts-graph";
+import { Graph } from "fp-ts-graph";
+import { Option } from "fp-ts/Option";
+import * as option from "fp-ts/Option";
+import { flow, pipe } from "fp-ts/function";
+import { eqNumber } from "fp-ts/lib/Eq";
+import { myGraph } from "./build-graph";
+
 pipe(
   myGraph,
 
