@@ -3,7 +3,7 @@
  */
 
 import { pipe } from "fp-ts/function";
-import * as map from "fp-ts/Map";
+import * as map_ from "fp-ts/Map";
 import * as array from "fp-ts/Array";
 import * as tuple from "fp-ts/Tuple";
 import * as option from "fp-ts/Option";
@@ -19,7 +19,7 @@ import { Eq, eqString, getStructEq } from "fp-ts/Eq";
  * @category model
  * @since 0.1.0
  */
-type Graph<Id, Edge, Node> = {
+export type Graph<Id, Edge, Node> = {
   readonly _brand: unique symbol;
   readonly nodes: Map<Id, NodeContext<Id, Node>>;
   readonly edges: Map<EdgeId<Id>, Edge>;
@@ -43,8 +43,8 @@ type EdgeId<Id> = { from: Id; to: Id };
  */
 export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
-    nodes: map.empty,
-    edges: map.empty,
+    nodes: map_.empty,
+    edges: map_.empty,
   });
 
 // -------------------------------------------------------------------------------------
@@ -55,14 +55,15 @@ export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
  * @category combinators
  * @since 0.1.0
  */
-export const insertNode = <Id, Edge, Node>(E: Eq<Id>) => (
-  id: Id,
-  data: Node
-) => (graph: Graph<Id, Edge, Node>): Graph<Id, Edge, Node> =>
+export const insertNode = <Id>(E: Eq<Id>) => <Node>(id: Id, data: Node) => <
+  Edge
+>(
+  graph: Graph<Id, Edge, Node>
+): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
     nodes: pipe(
       graph.nodes,
-      map.modifyAt(E)(id, ({ incoming, outgoing }) => ({
+      map_.modifyAt(E)(id, ({ incoming, outgoing }) => ({
         incoming,
         outgoing,
         data,
@@ -70,7 +71,7 @@ export const insertNode = <Id, Edge, Node>(E: Eq<Id>) => (
       option.getOrElse(() =>
         pipe(
           graph.nodes,
-          map.insertAt(E)(id, {
+          map_.insertAt(E)(id, {
             data,
             incoming: set_.empty as Set<Id>,
             outgoing: set_.empty as Set<Id>,
@@ -85,11 +86,11 @@ export const insertNode = <Id, Edge, Node>(E: Eq<Id>) => (
  * @category combinators
  * @since 0.1.0
  */
-export const insertEdge = <Id>(E: Eq<Id>) => <Node, Edge>(
+export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
   from: Id,
   to: Id,
   data: Edge
-) => (graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+) => <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
   pipe(
     graph.nodes,
     modifyEdgeInNodes(E)(from, to),
@@ -100,6 +101,40 @@ export const insertEdge = <Id>(E: Eq<Id>) => <Node, Edge>(
       })
     )
   );
+
+/**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const mapEdges = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <
+  Id,
+  Node
+>(
+  graph: Graph<Id, Edge1, Node>
+): Graph<Id, Edge2, Node> =>
+  unsafeMkGraph({
+    nodes: graph.nodes,
+    edges: pipe(graph.edges, map_.map(fn)),
+  });
+
+/**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const map = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
+  graph: Graph<Id, Edge, Node1>
+): Graph<Id, Edge, Node2> =>
+  unsafeMkGraph({
+    nodes: pipe(
+      graph.nodes,
+      map_.map(({ incoming, outgoing, data }) => ({
+        incoming,
+        outgoing,
+        data: fn(data),
+      }))
+    ),
+    edges: graph.edges,
+  });
 
 // -------------------------------------------------------------------------------------
 // destructors
@@ -114,7 +149,7 @@ export const nodeEntries = <Id, Edge, Node>(
 ): [Id, Node][] =>
   pipe(
     graph.nodes,
-    map.map(_ => _.data),
+    map_.map(_ => _.data),
     mapEntries
   );
 
@@ -134,17 +169,20 @@ export const edgeEntries = <Id, Edge, Node>(
  * @category debug
  * @since 0.1.0
  */
-export const toDotFile = (graph: Graph<string, string, string>): string =>
+export const toDotFile = <Id>(printId: (id: Id) => string) => (
+  graph: Graph<Id, string, string>
+): string =>
   pipe(
     [
       ...pipe(
         nodeEntries(graph),
-        array.map(([id, label]) => `"${id}" [label="${label}"]`)
+        array.map(([id, label]) => `"${printId(id)}" [label="${label}"]`)
       ),
       ...pipe(
         edgeEntries(graph),
         array.map(
-          ([{ from, to }, label]) => `"${from}" -> "${to}" [label="${label}"]`
+          ([{ from, to }, label]) =>
+            `"${printId(from)}" -> "${printId(to)}" [label="${label}"]`
         )
       ),
     ],
@@ -200,8 +238,8 @@ const modifyEdgeInNodes = <Id>(E: Eq<Id>) => (from: Id, to: Id) => <Node>(
 ): Option<Graph<Id, unknown, Node>["nodes"]> =>
   pipe(
     nodes,
-    map.modifyAt(E)(from, insertOutgoing(E)(to)),
-    option.chain(map.modifyAt(E)(to, insertIncoming(E)(from)))
+    map_.modifyAt(E)(from, insertOutgoing(E)(to)),
+    option.chain(map_.modifyAt(E)(to, insertIncoming(E)(from)))
   );
 
 const insertEdgeInEdges = <Id>(E: Eq<Id>) => <Edge>(
@@ -211,4 +249,4 @@ const insertEdgeInEdges = <Id>(E: Eq<Id>) => <Edge>(
 ) => (
   edges: Graph<Id, Edge, unknown>["edges"]
 ): Graph<Id, Edge, unknown>["edges"] =>
-  pipe(edges, map.insertAt(getEqEdgeId(E))({ from, to }, data));
+  pipe(edges, map_.insertAt(getEqEdgeId(E))({ from, to }, data));
