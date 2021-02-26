@@ -2,7 +2,7 @@ import * as graph from "../src";
 import { Graph } from "../src";
 import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
-import { flow, pipe } from "fp-ts/function";
+import { pipe } from "fp-ts/function";
 import { eqNumber } from "fp-ts/lib/Eq";
 import { MyEdge, MyId, MyNode } from "./types";
 

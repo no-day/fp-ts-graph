@@ -1,9 +1,6 @@
-import * as graph from "../src";
-import { Graph } from "../src";
-import { Option } from "fp-ts/Option";
+import * as graph from "fp-ts-graph";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
-import { eqNumber } from "fp-ts/lib/Eq";
 import { myGraph } from "./build-graph";
 
 pipe(

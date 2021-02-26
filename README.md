@@ -16,6 +16,7 @@ npm install fp-ts git+https://github.com/no-day/fp-ts-graph
 
 ```ts
 // examples/types.ts
+
 import { Graph } from "fp-ts-graph";
 
 // First, let's define some custom Id, Edge and Node type for our Graph
@@ -35,11 +36,12 @@ export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 
 ```ts
 // exmaples/build-graph.ts
+
 import * as graph from "fp-ts-graph";
 import { Graph } from "fp-ts-graph";
 import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
-import { flow, pipe } from "fp-ts/function";
+import { pipe } from "fp-ts/function";
 import { eqNumber } from "fp-ts/lib/Eq";
 import { MyEdge, MyId, MyNode } from "./types";
 
@@ -97,11 +99,8 @@ export const myGraph: Option<MyGraph> = pipe(
 // examples/debug-visually.ts
 
 import * as graph from "fp-ts-graph";
-import { Graph } from "fp-ts-graph";
-import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
-import { eqNumber } from "fp-ts/lib/Eq";
 import { myGraph } from "./build-graph";
 
 pipe(
@@ -137,7 +136,7 @@ pipe(
 If you have `graphviz` installed you can run the following in the terminal:
 
 ```bash
-ts-node examples/typescript/index.ts | dot -Tsvg > graph.svg
+ts-node examples/debug-visually.ts | dot -Tsvg > graph.svg
 chromium graph.svg
 ```
 
