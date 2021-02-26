@@ -6,6 +6,10 @@ import { pipe } from "fp-ts/function";
 import * as map from "fp-ts/Map";
 import * as array from "fp-ts/Array";
 import * as tuple from "fp-ts/Tuple";
+import * as option from "fp-ts/Option";
+import { Option } from "fp-ts/Option";
+import * as set_ from "fp-ts/Set";
+import { Eq, eqString, getStructEq } from "fp-ts/Eq";
 
 // -------------------------------------------------------------------------------------
 // model
@@ -42,6 +46,60 @@ export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
     nodes: map.empty,
     edges: map.empty,
   });
+
+// -------------------------------------------------------------------------------------
+// combinators
+// -------------------------------------------------------------------------------------
+
+/**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const insertNode = <Id, Edge, Node>(E: Eq<Id>) => (
+  id: Id,
+  data: Node
+) => (graph: Graph<Id, Edge, Node>): Graph<Id, Edge, Node> =>
+  unsafeMkGraph({
+    nodes: pipe(
+      graph.nodes,
+      map.modifyAt(E)(id, ({ incoming, outgoing }) => ({
+        incoming,
+        outgoing,
+        data,
+      })),
+      option.getOrElse(() =>
+        pipe(
+          graph.nodes,
+          map.insertAt(E)(id, {
+            data,
+            incoming: set_.empty as Set<Id>,
+            outgoing: set_.empty as Set<Id>,
+          })
+        )
+      )
+    ),
+    edges: graph.edges,
+  });
+
+/**
+ * @category combinators
+ * @since 0.1.0
+ */
+export const insertEdge = <Id>(E: Eq<Id>) => <Node, Edge>(
+  from: Id,
+  to: Id,
+  data: Edge
+) => (graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+  pipe(
+    graph.nodes,
+    modifyEdgeInNodes(E)(from, to),
+    option.map(nodes =>
+      unsafeMkGraph({
+        nodes,
+        edges: insertEdgeInEdges(E)(from, to, data)(graph.edges),
+      })
+    )
+  );
 
 // -------------------------------------------------------------------------------------
 // destructors
@@ -95,6 +153,17 @@ export const toDotFile = (graph: Graph<string, string, string>): string =>
   );
 
 // -------------------------------------------------------------------------------------
+// instances
+// -------------------------------------------------------------------------------------
+
+/**
+ * @category instances
+ * @since 0.1.0
+ */
+export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<EdgeId<Id>> =>
+  getStructEq({ from: E, to: E });
+
+// -------------------------------------------------------------------------------------
 // internal
 // -------------------------------------------------------------------------------------
 
@@ -109,3 +178,37 @@ const mapEntries = <K, V>(map_: Map<K, V>): [K, V][] =>
     Array.from,
     _ => _ as [K, V][]
   );
+
+const insertIncoming = <Id>(E: Eq<Id>) => (from: Id) => <Node>(
+  nodeContext: NodeContext<Id, Node>
+): NodeContext<Id, Node> => ({
+  data: nodeContext.data,
+  outgoing: nodeContext.outgoing,
+  incoming: pipe(nodeContext.incoming, set_.insert(E)(from)),
+});
+
+const insertOutgoing = <Id>(E: Eq<Id>) => (from: Id) => <Node>(
+  nodeContext: NodeContext<Id, Node>
+): NodeContext<Id, Node> => ({
+  data: nodeContext.data,
+  outgoing: pipe(nodeContext.outgoing, set_.insert(E)(from)),
+  incoming: nodeContext.outgoing,
+});
+
+const modifyEdgeInNodes = <Id>(E: Eq<Id>) => (from: Id, to: Id) => <Node>(
+  nodes: Graph<Id, unknown, Node>["nodes"]
+): Option<Graph<Id, unknown, Node>["nodes"]> =>
+  pipe(
+    nodes,
+    map.modifyAt(E)(from, insertOutgoing(E)(to)),
+    option.chain(map.modifyAt(E)(to, insertIncoming(E)(from)))
+  );
+
+const insertEdgeInEdges = <Id>(E: Eq<Id>) => <Edge>(
+  from: Id,
+  to: Id,
+  data: Edge
+) => (
+  edges: Graph<Id, Edge, unknown>["edges"]
+): Graph<Id, Edge, unknown>["edges"] =>
+  pipe(edges, map.insertAt(getEqEdgeId(E))({ from, to }, data));
