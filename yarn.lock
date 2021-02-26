@@ -295,8 +295,8 @@ for-in@^1.0.2:
   integrity sha1-gQaNKVqBQuwKxybG4iAMMPttXoA=
 
 "fp-ts-graph@git+https://github.com/no-day/fp-ts-graph":
-  version "0.1.0"
-  resolved "git+https://github.com/no-day/fp-ts-graph#6578902bc50925c9968f2b3c374b7b1ea284b6e3"
+  version "0.1.0-rc.1"
+  resolved "git+https://github.com/no-day/fp-ts-graph#e6b0313a1e1a0df75d965271e268cd6ddf2c7ee5"
 
 fp-ts@^2.9.3, fp-ts@^2.9.5:
   version "2.9.5"

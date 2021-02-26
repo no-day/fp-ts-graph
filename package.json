@@ -4,6 +4,7 @@
   "homepage": "https://github.com/no-day/fp-ts-graph",
   "main": "dist/index.js",
   "module": "src/index.ts",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "peerDependencies": {
     "fp-ts": "^2.9.5"
