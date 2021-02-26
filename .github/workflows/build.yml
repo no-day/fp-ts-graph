@@ -2,9 +2,9 @@ name: Test
 
 on:
   push:
-    branches: ["master", $default-branch]
+    branches: ["main", $default-branch]
   pull_request:
-    branches: ["master", $default-branch]
+    branches: ["main", $default-branch]
 
 jobs:
   build:
