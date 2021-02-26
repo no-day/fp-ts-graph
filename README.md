@@ -4,19 +4,19 @@ Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti
 
 The graph is directed and cyclic.
 
-# Install
+## Install
 
 ```bash
 npm install fp-ts git+https://github.com/no-day/fp-ts-graph
 ```
 
-# Docs
+## Docs
 
 [API](https://no-day.github.io/fp-ts-graph/modules/index.ts.html)
 
-# TypeScript Example
+## Examples
 
-## Define Types
+### Define Types
 
 ```ts
 // examples/types.ts
@@ -36,7 +36,7 @@ export type MyEdge = { items: number[] };
 export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 ```
 
-## Build Graph
+### Build Graph
 
 ```ts
 // examples/build-graph.ts
@@ -97,7 +97,7 @@ export const myGraph: Option<MyGraph> = pipe(
 );
 ```
 
-# Debug graph visually
+### Debug graph visually
 
 ```ts
 // examples/debug-visually.ts
