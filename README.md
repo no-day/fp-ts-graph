@@ -1,14 +1,18 @@
 # fp-ts-graph
 
-Immutable, functional graph data structure for fp-ts.
+Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti/fp-ts).
 
-The graph is directed and cyclic. The latter property will change in future to acyclic. Currently we don't check for cycles on insertion.
+The graph is directed and cyclic.
 
 # Install
 
 ```bash
 npm install fp-ts git+https://github.com/no-day/fp-ts-graph
 ```
+
+# Docs
+
+[API](https://no-day.github.io/fp-ts-graph/modules/index.ts.html)
 
 # TypeScript Example
 
@@ -35,7 +39,7 @@ export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 ## Build Graph
 
 ```ts
-// exmaples/build-graph.ts
+// examples/build-graph.ts
 
 import * as graph from "fp-ts-graph";
 import { Graph } from "fp-ts-graph";
@@ -49,7 +53,7 @@ import { MyEdge, MyId, MyNode } from "./types";
 
 type MyGraph = Graph<MyId, MyEdge, MyNode>;
 
-// To save some wrting, we define partially applied versions of the builder functions
+// To save some writing, we define partially applied versions of the builder functions
 
 const empty = graph.empty<MyId, MyEdge, MyNode>();
 const insertNode = graph.insertNode(eqNumber);
@@ -122,9 +126,9 @@ pipe(
     )
   ),
 
-  // Depending on if the graph was valid
+  // Depending if the graph was valid
   option.fold(
-    // We either print an erroe
+    // We either print an error
     () => console.error("invalid graph!"),
 
     // Or output the dot file
@@ -133,7 +137,7 @@ pipe(
 );
 ```
 
-If you have `graphviz` installed you can run the following in the terminal:
+If you have [graphviz](https://graphviz.org) installed you can run the following in the terminal:
 
 ```bash
 ts-node examples/debug-visually.ts | dot -Tsvg > graph.svg
