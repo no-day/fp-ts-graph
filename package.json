@@ -1,14 +1,24 @@
 {
   "name": "fp-ts-graph",
   "version": "0.1.0",
-  "main": "index.js",
+  "homepage": "https://github.com/no-day/fp-ts-graph",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "license": "MIT",
   "peerDependencies": {
     "fp-ts": "^2.9.5"
   },
   "devDependencies": {
+    "docs-ts": "^0.6.4",
     "fp-ts": "^2.9.5",
+    "prettier": "^2.2.1",
     "ts-node": "^9.1.1",
     "typescript": "^4.2.2"
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublish": "yarn build",
+    "docs": "yarn docs-ts",
+    "test": "exit 0"
   }
 }
