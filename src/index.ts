@@ -19,11 +19,11 @@ import { Eq, eqString, getStructEq } from "fp-ts/Eq";
  * @category model
  * @since 0.1.0
  */
-export type Graph<Id, Edge, Node> = {
+export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
   readonly nodes: Map<Id, NodeContext<Id, Node>>;
   readonly edges: Map<EdgeId<Id>, Edge>;
-};
+}
 
 type NodeContext<Id, Node> = {
   data: Node;
