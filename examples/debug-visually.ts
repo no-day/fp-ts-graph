@@ -1,4 +1,4 @@
-import * as graph from "fp-ts-graph";
+import * as graph from "@no-day/fp-ts-graph";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
 import { myGraph } from "./build-graph";

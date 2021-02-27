@@ -21,7 +21,7 @@ npm install fp-ts @no-day/fp-ts-graph
 ```ts
 // examples/types.ts
 
-import { Graph } from "fp-ts-graph";
+import { Graph } from "@no-day/fp-ts-graph";
 
 // First, let's define some custom Id, Edge and Node type for our Graph
 
@@ -41,8 +41,8 @@ export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 ```ts
 // examples/build-graph.ts
 
-import * as graph from "fp-ts-graph";
-import { Graph } from "fp-ts-graph";
+import * as graph from "@no-day/fp-ts-graph";
+import { Graph } from "@no-day/fp-ts-graph";
 import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
@@ -102,7 +102,7 @@ export const myGraph: Option<MyGraph> = pipe(
 ```ts
 // examples/debug-visually.ts
 
-import * as graph from "fp-ts-graph";
+import * as graph from "@no-day/fp-ts-graph";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
 import { myGraph } from "./build-graph";

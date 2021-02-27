@@ -1,5 +1,5 @@
-import * as graph from "fp-ts-graph";
-import { Graph } from "fp-ts-graph";
+import * as graph from "@no-day/fp-ts-graph";
+import { Graph } from "@no-day/fp-ts-graph";
 import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
