@@ -27,7 +27,7 @@ Added in v0.1.0
 - [instances](#instances)
   - [getEqEdgeId](#geteqedgeid)
 - [model](#model)
-  - [Graph (type alias)](#graph-type-alias)
+  - [Graph (interface)](#graph-interface)
 
 ---
 
@@ -145,12 +145,12 @@ Added in v0.1.0
 
 # model
 
-## Graph (type alias)
+## Graph (interface)
 
 **Signature**
 
 ```ts
-export type Graph<Id, Edge, Node> = {
+export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol
   readonly nodes: Map<Id, NodeContext<Id, Node>>
   readonly edges: Map<EdgeId<Id>, Edge>
