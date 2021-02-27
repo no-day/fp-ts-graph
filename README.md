@@ -7,7 +7,7 @@ The graph is directed and cyclic.
 ## Install
 
 ```bash
-npm install fp-ts fp-ts-graph
+npm install fp-ts @no-day/fp-ts-graph
 ```
 
 ## Docs
