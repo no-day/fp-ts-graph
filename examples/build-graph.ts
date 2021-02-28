@@ -4,11 +4,9 @@ import { Option } from "fp-ts/Option";
 import * as option from "fp-ts/Option";
 import { pipe } from "fp-ts/function";
 import { eqNumber } from "fp-ts/lib/Eq";
-import { MyEdge, MyId, MyNode } from "./types";
 
-// With this we can define a customized Graph type
-
-type MyGraph = Graph<MyId, MyEdge, MyNode>;
+// We import our types from the previous section
+import { MyEdge, MyId, MyNode, MyGraph } from "./types";
 
 // To save some wrting, we define partially applied versions of the builder functions
 
