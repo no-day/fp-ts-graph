@@ -4,6 +4,10 @@ Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti
 
 The graph is directed and cyclic.
 
+```ts
+type Graph<Id, Edge, Node> = ...
+```
+
 ## Install
 
 ```bash
