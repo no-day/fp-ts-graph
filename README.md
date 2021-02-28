@@ -103,6 +103,8 @@ export const myGraph: Option<MyGraph> = pipe(
 import * as graph from "@no-day/fp-ts-graph";
 import * as option from "fp-ts/Option";
 import { flow, pipe } from "fp-ts/function";
+
+// We import our graph from the previous section
 import { myGraph } from "./build-graph";
 
 pipe(
