@@ -36,6 +36,9 @@ Added in v0.1.0
 
 ## insertEdge
 
+Tries to insert an edge with some data into a given graph. Only succeeds if
+the specified start and end node id do exists in the graph.
+
 **Signature**
 
 ```ts
@@ -51,44 +54,91 @@ export declare const insertEdge: <Id>(
 **Example**
 
 ```ts
+// Between different nodes
+
 import * as graph from '@no-day/fp-ts-graph'
 import { Graph } from '@no-day/fp-ts-graph'
 import * as option from 'fp-ts/Option'
+import { Option } from 'fp-ts/Option'
 import { pipe } from 'fp-ts/function'
-import { eqNumber } from 'fp-ts/Eq'
+import { eqString } from 'fp-ts/Eq'
 
-const myGraph: Graph<number, string, string> = pipe(
-  graph.empty<number, string, string>(),
-  graph.insertNode(eqNumber)(54, 'n1'),
-  graph.insertNode(eqNumber)(3, 'n2')
+type MyGraph = Graph<string, string, string>
+
+const myGraph: MyGraph = pipe(
+  graph.empty<string, string, string>(),
+  graph.insertNode(eqString)('n1', 'Node 1'),
+  graph.insertNode(eqString)('n2', 'Node 2')
 )
 
-// Between different nodes
 assert.deepStrictEqual(
-  pipe(myGraph, graph.insertEdge(eqNumber)(54, 3, 'e1'), option.map(graph.entries)),
+  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n2', 'Edge 1'), option.map(graph.entries)),
   option.some({
     nodes: [
-      [54, 'n1'],
-      [3, 'n2'],
+      ['n1', 'Node 1'],
+      ['n2', 'Node 2'],
     ],
-    edges: [[{ from: 54, to: 3 }, 'e1']],
+    edges: [[{ from: 'n1', to: 'n2' }, 'Edge 1']],
   })
 )
+```
 
+**Example**
+
+```ts
 // Cycle
-assert.deepStrictEqual(
-  pipe(myGraph, graph.insertEdge(eqNumber)(3, 3, 'e1'), option.map(graph.entries)),
-  option.some({
-    nodes: [
-      [54, 'n1'],
-      [3, 'n2'],
-    ],
-    edges: [[{ from: 3, to: 3 }, 'e1']],
-  })
+
+import * as graph from '@no-day/fp-ts-graph'
+import { Graph } from '@no-day/fp-ts-graph'
+import * as option from 'fp-ts/Option'
+import { Option } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
+import { eqString } from 'fp-ts/Eq'
+
+type MyGraph = Graph<string, string, string>
+
+const myGraph: MyGraph = pipe(
+  graph.empty<string, string, string>(),
+  graph.insertNode(eqString)('n1', 'Node 1'),
+  graph.insertNode(eqString)('n2', 'Node 2')
 )
 
+assert.deepStrictEqual(
+  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n1', 'Edge 1'), option.map(graph.entries)),
+  option.some({
+    nodes: [
+      ['n1', 'Node 1'],
+      ['n2', 'Node 2'],
+    ],
+    edges: [[{ from: 'n1', to: 'n1' }, 'Edge 1']],
+  })
+)
+```
+
+**Example**
+
+```ts
 // Invalid
-assert.deepStrictEqual(pipe(myGraph, graph.insertEdge(eqNumber)(7, 3, 'e1'), option.map(graph.entries)), option.none)
+
+import * as graph from '@no-day/fp-ts-graph'
+import { Graph } from '@no-day/fp-ts-graph'
+import * as option from 'fp-ts/Option'
+import { Option } from 'fp-ts/Option'
+import { pipe } from 'fp-ts/function'
+import { eqString } from 'fp-ts/Eq'
+
+type MyGraph = Graph<string, string, string>
+
+const myGraph: MyGraph = pipe(
+  graph.empty<string, string, string>(),
+  graph.insertNode(eqString)('n1', 'Node 1'),
+  graph.insertNode(eqString)('n2', 'Node 2')
+)
+
+assert.deepStrictEqual(
+  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n3', 'Edge 1'), option.map(graph.entries)),
+  option.none
+)
 ```
 
 Added in v0.1.0
@@ -119,15 +169,13 @@ const myGraph = pipe(
   graph.insertNode(eqNumber)(3, 'n2')
 )
 
-pipe(myGraph, graph.entries, (_) =>
-  assert.deepStrictEqual(_, {
-    nodes: [
-      [54, 'n1'],
-      [3, 'n2'],
-    ],
-    edges: [],
-  })
-)
+assert.deepStrictEqual(pipe(myGraph, graph.entries), {
+  nodes: [
+    [54, 'n1'],
+    [3, 'n2'],
+  ],
+  edges: [],
+})
 ```
 
 Added in v0.1.0
