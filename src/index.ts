@@ -1,23 +1,28 @@
-/**
- * @since 0.1.0
- */
+/** @since 0.1.0 */
 
-import { pipe } from "fp-ts/function";
-import * as map_ from "fp-ts/Map";
-import * as array from "fp-ts/Array";
-import * as tuple from "fp-ts/Tuple";
-import * as option from "fp-ts/Option";
-import { Option } from "fp-ts/Option";
-import * as set_ from "fp-ts/Set";
-import { Eq, eqString, getStructEq } from "fp-ts/Eq";
+import { pipe } from 'fp-ts/function';
+import * as map_ from 'fp-ts/Map';
+import * as array from 'fp-ts/Array';
+import * as tuple from 'fp-ts/Tuple';
+import * as option from 'fp-ts/Option';
+import { Option } from 'fp-ts/Option';
+import * as set_ from 'fp-ts/Set';
+import { Eq, eqString, getStructEq } from 'fp-ts/Eq';
 
 // -------------------------------------------------------------------------------------
 // model
 // -------------------------------------------------------------------------------------
 
 /**
- * @category model
+ * Graph data structure. Currently we still expose the internal implementation
+ * but those details may become opaque in the future.
+ *
+ * - Id means `Id` of a node,
+ * - `Node` is the data/label attached to a node
+ * - `Edge` is the data/label attached to a an edge
+ *
  * @since 0.1.0
+ * @category Model
  */
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
@@ -38,8 +43,21 @@ type EdgeId<Id> = { from: Id; to: Id };
 // -------------------------------------------------------------------------------------
 
 /**
- * @category constructors
+ * Creates an empty graph.
+ *
  * @since 0.1.0
+ * @category Constructors
+ * @example
+ *   import * as graph from '@no-day/fp-ts-graph';
+ *   import { Graph } from '@no-day/fp-ts-graph';
+ *
+ *   type MyGraph = Graph<string, string, string>;
+ *
+ *   // `graph.empty()` will give you a `Graph<unknown, unknown, unknown>` and as you'll
+ *   // insert nodes and edges of a specific type later, it makes sense to already
+ *   // provide the types.
+ *
+ *   const myGraph: MyGraph = graph.empty();
  */
 export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
@@ -52,8 +70,31 @@ export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
 // -------------------------------------------------------------------------------------
 
 /**
- * @category combinators
+ * Inserts node data to a graph under a given id. If the id already exists in
+ * the graph, the data is replaced.
+ *
  * @since 0.1.0
+ * @category Combinators
+ * @example
+ *   import * as graph from '@no-day/fp-ts-graph';
+ *   import { pipe } from 'fp-ts/function';
+ *   import { eqNumber } from 'fp-ts/Eq';
+ *
+ *   const myGraph = pipe(
+ *     graph.empty<number, unknown, string>(),
+ *     graph.insertNode(eqNumber)(54, 'n1'),
+ *     graph.insertNode(eqNumber)(3, 'n2')
+ *   );
+ *
+ *   pipe(myGraph, graph.entries, (_) =>
+ *     assert.deepStrictEqual(_, {
+ *       nodes: [
+ *         [54, 'n1'],
+ *         [3, 'n2'],
+ *       ],
+ *       edges: [],
+ *     })
+ *   );
  */
 export const insertNode = <Id>(E: Eq<Id>) => <Node>(id: Id, data: Node) => <
   Edge
@@ -83,8 +124,62 @@ export const insertNode = <Id>(E: Eq<Id>) => <Node>(id: Id, data: Node) => <
   });
 
 /**
- * @category combinators
  * @since 0.1.0
+ * @category Combinators
+ * @example
+ *   import * as graph from '@no-day/fp-ts-graph';
+ *   import { Graph } from '@no-day/fp-ts-graph';
+ *   import * as option from 'fp-ts/Option';
+ *   import { pipe } from 'fp-ts/function';
+ *   import { eqNumber } from 'fp-ts/Eq';
+ *
+ *   const myGraph: Graph<number, string, string> = pipe(
+ *     graph.empty<number, string, string>(),
+ *     graph.insertNode(eqNumber)(54, 'n1'),
+ *     graph.insertNode(eqNumber)(3, 'n2')
+ *   );
+ *
+ *   // Between different nodes
+ *   assert.deepStrictEqual(
+ *     pipe(
+ *       myGraph,
+ *       graph.insertEdge(eqNumber)(54, 3, 'e1'),
+ *       option.map(graph.entries)
+ *     ),
+ *     option.some({
+ *       nodes: [
+ *         [54, 'n1'],
+ *         [3, 'n2'],
+ *       ],
+ *       edges: [[{ from: 54, to: 3 }, 'e1']],
+ *     })
+ *   );
+ *
+ *   // Cycle
+ *   assert.deepStrictEqual(
+ *     pipe(
+ *       myGraph,
+ *       graph.insertEdge(eqNumber)(3, 3, 'e1'),
+ *       option.map(graph.entries)
+ *     ),
+ *     option.some({
+ *       nodes: [
+ *         [54, 'n1'],
+ *         [3, 'n2'],
+ *       ],
+ *       edges: [[{ from: 3, to: 3 }, 'e1']],
+ *     })
+ *   );
+ *
+ *   // Invalid
+ *   assert.deepStrictEqual(
+ *     pipe(
+ *       myGraph,
+ *       graph.insertEdge(eqNumber)(7, 3, 'e1'),
+ *       option.map(graph.entries)
+ *     ),
+ *     option.none
+ *   );
  */
 export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
   from: Id,
@@ -94,7 +189,7 @@ export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
   pipe(
     graph.nodes,
     modifyEdgeInNodes(E)(from, to),
-    option.map(nodes =>
+    option.map((nodes) =>
       unsafeMkGraph({
         nodes,
         edges: insertEdgeInEdges(E)(from, to, data)(graph.edges),
@@ -103,8 +198,8 @@ export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
   );
 
 /**
- * @category combinators
  * @since 0.1.0
+ * @category Combinators
  */
 export const mapEdges = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <
   Id,
@@ -118,8 +213,8 @@ export const mapEdges = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <
   });
 
 /**
- * @category combinators
  * @since 0.1.0
+ * @category Combinators
  */
 export const map = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
   graph: Graph<Id, Edge, Node1>
@@ -141,33 +236,44 @@ export const map = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
 // -------------------------------------------------------------------------------------
 
 /**
- * @category destructors
  * @since 0.1.0
+ * @category Destructors
  */
 export const nodeEntries = <Id, Edge, Node>(
   graph: Graph<Id, Edge, Node>
 ): [Id, Node][] =>
   pipe(
     graph.nodes,
-    map_.map(_ => _.data),
+    map_.map((_) => _.data),
     mapEntries
   );
 
 /**
- * @category destructors
  * @since 0.1.0
+ * @category Destructors
  */
 export const edgeEntries = <Id, Edge, Node>(
   graph: Graph<Id, Edge, Node>
 ): [EdgeId<Id>, Edge][] => pipe(graph.edges, mapEntries);
+
+/**
+ * @since 0.1.0
+ * @category Destructors
+ */
+export const entries = <Id, Edge, Node>(
+  graph: Graph<Id, Edge, Node>
+): { nodes: [Id, Node][]; edges: [EdgeId<Id>, Edge][] } => ({
+  nodes: nodeEntries(graph),
+  edges: edgeEntries(graph),
+});
 
 // -------------------------------------------------------------------------------------
 // debug
 // -------------------------------------------------------------------------------------
 
 /**
- * @category debug
  * @since 0.1.0
+ * @category Debug
  */
 export const toDotFile = <Id>(printId: (id: Id) => string) => (
   graph: Graph<Id, string, string>
@@ -186,8 +292,8 @@ export const toDotFile = <Id>(printId: (id: Id) => string) => (
         )
       ),
     ],
-    _ => ["digraph {", ..._, "}"],
-    _ => _.join("\n")
+    (_) => ['digraph {', ..._, '}'],
+    (_) => _.join('\n')
   );
 
 // -------------------------------------------------------------------------------------
@@ -195,8 +301,8 @@ export const toDotFile = <Id>(printId: (id: Id) => string) => (
 // -------------------------------------------------------------------------------------
 
 /**
- * @category instances
  * @since 0.1.0
+ * @category Instances
  */
 export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<EdgeId<Id>> =>
   getStructEq({ from: E, to: E });
@@ -206,15 +312,15 @@ export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<EdgeId<Id>> =>
 // -------------------------------------------------------------------------------------
 
 const unsafeMkGraph = <Id, Edge, Node>(
-  graphData: Omit<Graph<Id, Edge, Node>, "_brand">
+  graphData: Omit<Graph<Id, Edge, Node>, '_brand'>
 ): Graph<Id, Edge, Node> => graphData as Graph<Id, Edge, Node>;
 
 const mapEntries = <K, V>(map_: Map<K, V>): [K, V][] =>
   pipe(
     map_,
-    _ => _.entries(),
+    (_) => _.entries(),
     Array.from,
-    _ => _ as [K, V][]
+    (_) => _ as [K, V][]
   );
 
 const insertIncoming = <Id>(E: Eq<Id>) => (from: Id) => <Node>(
@@ -234,8 +340,8 @@ const insertOutgoing = <Id>(E: Eq<Id>) => (from: Id) => <Node>(
 });
 
 const modifyEdgeInNodes = <Id>(E: Eq<Id>) => (from: Id, to: Id) => <Node>(
-  nodes: Graph<Id, unknown, Node>["nodes"]
-): Option<Graph<Id, unknown, Node>["nodes"]> =>
+  nodes: Graph<Id, unknown, Node>['nodes']
+): Option<Graph<Id, unknown, Node>['nodes']> =>
   pipe(
     nodes,
     map_.modifyAt(E)(from, insertOutgoing(E)(to)),
@@ -247,6 +353,6 @@ const insertEdgeInEdges = <Id>(E: Eq<Id>) => <Edge>(
   to: Id,
   data: Edge
 ) => (
-  edges: Graph<Id, Edge, unknown>["edges"]
-): Graph<Id, Edge, unknown>["edges"] =>
+  edges: Graph<Id, Edge, unknown>['edges']
+): Graph<Id, Edge, unknown>['edges'] =>
   pipe(edges, map_.insertAt(getEqEdgeId(E))({ from, to }, data));

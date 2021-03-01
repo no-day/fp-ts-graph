@@ -1,12 +1,12 @@
-import * as graph from "@no-day/fp-ts-graph";
-import { Graph } from "@no-day/fp-ts-graph";
-import { Option } from "fp-ts/Option";
-import * as option from "fp-ts/Option";
-import { pipe } from "fp-ts/function";
-import { eqNumber } from "fp-ts/lib/Eq";
+import * as graph from '../src';
+import { Graph } from '../src';
+import { Option } from 'fp-ts/Option';
+import * as option from 'fp-ts/Option';
+import { pipe } from 'fp-ts/function';
+import { eqNumber } from 'fp-ts/lib/Eq';
 
 // We import our types from the previous section
-import { MyEdge, MyId, MyNode, MyGraph } from "./types";
+import { MyEdge, MyId, MyNode, MyGraph } from './types';
 
 // To save some wrting, we define partially applied versions of the builder functions
 
@@ -22,23 +22,23 @@ export const myGraph: Option<MyGraph> = pipe(
 
   // And add some nodes to it.
   insertNode(1001, {
-    firstName: "Tonicha",
-    lastName: "Crowther",
+    firstName: 'Tonicha',
+    lastName: 'Crowther',
     age: 45,
   }),
   insertNode(1002, {
-    firstName: "Samual",
-    lastName: "Sierra",
+    firstName: 'Samual',
+    lastName: 'Sierra',
     age: 29,
   }),
   insertNode(1003, {
-    firstName: "Khushi",
-    lastName: "Walter",
+    firstName: 'Khushi',
+    lastName: 'Walter',
     age: 40,
   }),
   insertNode(1004, {
-    firstName: "Rian",
-    lastName: "Ruiz",
+    firstName: 'Rian',
+    lastName: 'Ruiz',
     age: 56,
   }),
 

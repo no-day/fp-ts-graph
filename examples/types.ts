@@ -1,4 +1,4 @@
-import { Graph } from "@no-day/fp-ts-graph";
+import { Graph } from '../src';
 
 // First, let's define some custom Id, Edge and Node type for our Graph
 
