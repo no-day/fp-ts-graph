@@ -86,38 +86,6 @@ assert.deepStrictEqual(
 **Example**
 
 ```ts
-// Cycle
-
-import * as graph from '@no-day/fp-ts-graph'
-import { Graph } from '@no-day/fp-ts-graph'
-import * as option from 'fp-ts/Option'
-import { Option } from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
-import { eqString } from 'fp-ts/Eq'
-
-type MyGraph = Graph<string, string, string>
-
-const myGraph: MyGraph = pipe(
-  graph.empty<string, string, string>(),
-  graph.insertNode(eqString)('n1', 'Node 1'),
-  graph.insertNode(eqString)('n2', 'Node 2')
-)
-
-assert.deepStrictEqual(
-  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n1', 'Edge 1'), option.map(graph.entries)),
-  option.some({
-    nodes: [
-      ['n1', 'Node 1'],
-      ['n2', 'Node 2'],
-    ],
-    edges: [[{ from: 'n1', to: 'n1' }, 'Edge 1']],
-  })
-)
-```
-
-**Example**
-
-```ts
 // Invalid
 
 import * as graph from '@no-day/fp-ts-graph'
