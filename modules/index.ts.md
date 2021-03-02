@@ -29,6 +29,7 @@ Added in v0.1.0
   - [getEqEdgeId](#geteqedgeid)
 - [Model](#model)
   - [Graph (interface)](#graph-interface)
+  - [default](#default)
 
 ---
 
@@ -54,58 +55,26 @@ export declare const insertEdge: <Id>(
 **Example**
 
 ```ts
-// Between different nodes
-
-import * as graph from '@no-day/fp-ts-graph'
-import { Graph } from '@no-day/fp-ts-graph'
-import * as option from 'fp-ts/Option'
-import { Option } from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
-import { eqString } from 'fp-ts/Eq'
+import Graph, * as graph from '@no-day/fp-ts-graph'
+import * as fp from 'fp-ts'
 
 type MyGraph = Graph<string, string, string>
 
-const myGraph: MyGraph = pipe(
+const myGraph: MyGraph = fp.function.pipe(
   graph.empty<string, string, string>(),
-  graph.insertNode(eqString)('n1', 'Node 1'),
-  graph.insertNode(eqString)('n2', 'Node 2')
+  graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+  graph.insertNode(fp.eq.eqString)('n2', 'Node 2')
 )
 
 assert.deepStrictEqual(
-  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n2', 'Edge 1'), option.map(graph.entries)),
-  option.some({
+  fp.function.pipe(myGraph, graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1'), fp.option.map(graph.entries)),
+  fp.option.some({
     nodes: [
       ['n1', 'Node 1'],
       ['n2', 'Node 2'],
     ],
     edges: [[{ from: 'n1', to: 'n2' }, 'Edge 1']],
   })
-)
-```
-
-**Example**
-
-```ts
-// Invalid
-
-import * as graph from '@no-day/fp-ts-graph'
-import { Graph } from '@no-day/fp-ts-graph'
-import * as option from 'fp-ts/Option'
-import { Option } from 'fp-ts/Option'
-import { pipe } from 'fp-ts/function'
-import { eqString } from 'fp-ts/Eq'
-
-type MyGraph = Graph<string, string, string>
-
-const myGraph: MyGraph = pipe(
-  graph.empty<string, string, string>(),
-  graph.insertNode(eqString)('n1', 'Node 1'),
-  graph.insertNode(eqString)('n2', 'Node 2')
-)
-
-assert.deepStrictEqual(
-  pipe(myGraph, graph.insertEdge(eqString)('n1', 'n3', 'Edge 1'), option.map(graph.entries)),
-  option.none
 )
 ```
 
@@ -128,16 +97,15 @@ export declare const insertNode: <Id>(
 
 ```ts
 import * as graph from '@no-day/fp-ts-graph'
-import { pipe } from 'fp-ts/function'
-import { eqNumber } from 'fp-ts/Eq'
+import * as fp from 'fp-ts'
 
-const myGraph = pipe(
+const myGraph = fp.function.pipe(
   graph.empty<number, unknown, string>(),
-  graph.insertNode(eqNumber)(54, 'n1'),
-  graph.insertNode(eqNumber)(3, 'n2')
+  graph.insertNode(fp.eq.eqNumber)(54, 'n1'),
+  graph.insertNode(fp.eq.eqNumber)(3, 'n2')
 )
 
-assert.deepStrictEqual(pipe(myGraph, graph.entries), {
+assert.deepStrictEqual(fp.function.pipe(myGraph, graph.entries), {
   nodes: [
     [54, 'n1'],
     [3, 'n2'],
@@ -187,8 +155,7 @@ export declare const empty: <Id, Edge, Node>() => Graph<Id, Edge, Node>
 **Example**
 
 ```ts
-import * as graph from '@no-day/fp-ts-graph'
-import { Graph } from '@no-day/fp-ts-graph'
+import Graph, * as graph from '@no-day/fp-ts-graph'
 
 type MyGraph = Graph<string, string, string>
 
@@ -278,6 +245,16 @@ export interface Graph<Id, Edge, Node> {
   readonly nodes: Map<Id, NodeContext<Id, Node>>
   readonly edges: Map<EdgeId<Id>, Edge>
 }
+```
+
+Added in v0.1.0
+
+## default
+
+**Signature**
+
+```ts
+export declare const default: any
 ```
 
 Added in v0.1.0
