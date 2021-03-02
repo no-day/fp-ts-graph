@@ -1,18 +1,3 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-
-- [fp-ts-graph](#fp-ts-graph)
-  - [What it's not](#what-its-not)
-  - [Install](#install)
-  - [Docs](#docs)
-  - [Examples](#examples)
-    - [Define Types](#define-types)
-    - [Build Graph](#build-graph)
-    - [Debug graph visually](#debug-graph-visually)
-  - [Roadmap / to do](#roadmap--to-do)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
 # fp-ts-graph
 
 Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti/fp-ts).
@@ -22,6 +7,20 @@ The graph is directed and cyclic.
 ```ts
 type Graph<Id, Edge, Node> = ...
 ```
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+- [What it's not](#what-its-not)
+- [Install](#install)
+- [Docs](#docs)
+- [Examples](#examples)
+  - [Define Types](#define-types)
+  - [Build Graph](#build-graph)
+  - [Debug graph visually](#debug-graph-visually)
+- [Roadmap / to do](#roadmap--to-do)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## What it's not
 
