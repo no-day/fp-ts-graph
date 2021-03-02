@@ -1,9 +1,5 @@
-import * as graph from '../src';
-import { Graph } from '../src';
-import { Option } from 'fp-ts/Option';
-import * as option from 'fp-ts/Option';
-import { pipe } from 'fp-ts/function';
-import { eqNumber } from 'fp-ts/lib/Eq';
+import Graph, * as graph from '../src';
+import * as fp from 'fp-ts';
 
 // We import our types from the previous section
 import { MyEdge, MyId, MyNode, MyGraph } from './types';
@@ -11,12 +7,12 @@ import { MyEdge, MyId, MyNode, MyGraph } from './types';
 // To save some wrting, we define partially applied versions of the builder functions
 
 const empty = graph.empty<MyId, MyEdge, MyNode>();
-const insertNode = graph.insertNode(eqNumber);
-const insertEdge = graph.insertEdge(eqNumber);
+const insertNode = graph.insertNode(fp.eq.eqNumber);
+const insertEdge = graph.insertEdge(fp.eq.eqNumber);
 
 // Then, let's fill the graph with Data.
 
-export const myGraph: Option<MyGraph> = pipe(
+export const myGraph: fp.option.Option<MyGraph> = fp.function.pipe(
   // We start out with and empty graph.
   empty,
 
@@ -44,9 +40,9 @@ export const myGraph: Option<MyGraph> = pipe(
 
   // Then we connect them with edges, which can have data, too
 
-  option.of,
-  option.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  option.chain(insertEdge(1002, 1003, { items: [4] })),
-  option.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  option.chain(insertEdge(1003, 1004, { items: [2, 3] }))
+  fp.option.of,
+  fp.option.chain(insertEdge(1001, 1002, { items: [2, 3] })),
+  fp.option.chain(insertEdge(1002, 1003, { items: [4] })),
+  fp.option.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
+  fp.option.chain(insertEdge(1003, 1004, { items: [2, 3] }))
 );

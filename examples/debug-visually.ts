@@ -1,16 +1,15 @@
 import * as graph from '../src';
-import * as option from 'fp-ts/Option';
-import { flow, pipe } from 'fp-ts/function';
+import * as fp from 'fp-ts';
 
 // We import our graph from the previous section
 import { myGraph } from './build-graph';
 
-pipe(
+fp.function.pipe(
   myGraph,
 
   // We need to map over the graph as it may be invalid
-  option.map(
-    flow(
+  fp.option.map(
+    fp.function.flow(
       // Then turn the edges into strings
       graph.mapEdges(({ items }) => items.join(', ')),
 
@@ -25,7 +24,7 @@ pipe(
   ),
 
   // Depending on if the graph was valid
-  option.fold(
+  fp.option.fold(
     // We either print an erroe
     () => console.error('invalid graph!'),
 

@@ -25,7 +25,7 @@ npm install fp-ts @no-day/fp-ts-graph
 ```ts
 // examples/types.ts
 
-import { Graph } from "@no-day/fp-ts-graph";
+import { Graph } from '@no-day/fp-ts-graph';
 
 // First, let's define some custom Id, Edge and Node type for our Graph
 
@@ -45,57 +45,53 @@ export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 ```ts
 // examples/build-graph.ts
 
-import * as graph from "@no-day/fp-ts-graph";
-import { Graph } from "@no-day/fp-ts-graph";
-import { Option } from "fp-ts/Option";
-import * as option from "fp-ts/Option";
-import { pipe } from "fp-ts/function";
-import { eqNumber } from "fp-ts/lib/Eq";
+import Graph, * as graph from '@no-day/fp-ts-graph';
+import * as fp from 'fp-ts';
 
 // We import our types from the previous section
-import { MyEdge, MyId, MyNode, MyGraph } from "./types";
+import { MyEdge, MyId, MyNode, MyGraph } from './types';
 
-// To save some writing, we define partially applied versions of the builder functions
+// To save some wrting, we define partially applied versions of the builder functions
 
 const empty = graph.empty<MyId, MyEdge, MyNode>();
-const insertNode = graph.insertNode(eqNumber);
-const insertEdge = graph.insertEdge(eqNumber);
+const insertNode = graph.insertNode(fp.eq.eqNumber);
+const insertEdge = graph.insertEdge(fp.eq.eqNumber);
 
 // Then, let's fill the graph with Data.
 
-export const myGraph: Option<MyGraph> = pipe(
+export const myGraph: fp.option.Option<MyGraph> = fp.function.pipe(
   // We start out with and empty graph.
   empty,
 
   // And add some nodes to it.
   insertNode(1001, {
-    firstName: "Tonicha",
-    lastName: "Crowther",
+    firstName: 'Tonicha',
+    lastName: 'Crowther',
     age: 45,
   }),
   insertNode(1002, {
-    firstName: "Samual",
-    lastName: "Sierra",
+    firstName: 'Samual',
+    lastName: 'Sierra',
     age: 29,
   }),
   insertNode(1003, {
-    firstName: "Khushi",
-    lastName: "Walter",
+    firstName: 'Khushi',
+    lastName: 'Walter',
     age: 40,
   }),
   insertNode(1004, {
-    firstName: "Rian",
-    lastName: "Ruiz",
+    firstName: 'Rian',
+    lastName: 'Ruiz',
     age: 56,
   }),
 
   // Then we connect them with edges, which can have data, too
 
-  option.of,
-  option.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  option.chain(insertEdge(1002, 1003, { items: [4] })),
-  option.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  option.chain(insertEdge(1003, 1004, { items: [2, 3] }))
+  fp.option.of,
+  fp.option.chain(insertEdge(1001, 1002, { items: [2, 3] })),
+  fp.option.chain(insertEdge(1002, 1003, { items: [4] })),
+  fp.option.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
+  fp.option.chain(insertEdge(1003, 1004, { items: [2, 3] }))
 );
 ```
 
@@ -104,21 +100,20 @@ export const myGraph: Option<MyGraph> = pipe(
 ```ts
 // examples/debug-visually.ts
 
-import * as graph from "@no-day/fp-ts-graph";
-import * as option from "fp-ts/Option";
-import { flow, pipe } from "fp-ts/function";
+import * as graph from '@no-day/fp-ts-graph';
+import * as fp from 'fp-ts';
 
 // We import our graph from the previous section
-import { myGraph } from "./build-graph";
+import { myGraph } from './build-graph';
 
-pipe(
+fp.function.pipe(
   myGraph,
 
   // We need to map over the graph as it may be invalid
-  option.map(
-    flow(
+  fp.option.map(
+    fp.function.flow(
       // Then turn the edges into strings
-      graph.mapEdges(({ items }) => items.join(", ")),
+      graph.mapEdges(({ items }) => items.join(', ')),
 
       // The same we do with the nodes
       graph.map(
@@ -126,14 +121,14 @@ pipe(
       ),
 
       // For debugging, we generate a simple dot file
-      graph.toDotFile(_ => _.toString())
+      graph.toDotFile((_) => _.toString())
     )
   ),
 
-  // Depending if the graph was valid
-  option.fold(
-    // We either print an error
-    () => console.error("invalid graph!"),
+  // Depending on if the graph was valid
+  fp.option.fold(
+    // We either print an erroe
+    () => console.error('invalid graph!'),
 
     // Or output the dot file
     console.log
