@@ -8,6 +8,10 @@ The graph is directed and cyclic.
 type Graph<Id, Edge, Node> = ...
 ```
 
+## What it's not
+
+A rendering engine or anything that has to do with a visual representation of a graph. However, for for debugging purpose we provide simple graphviz dotfile generator.
+
 ## Install
 
 ```bash
@@ -16,7 +20,7 @@ npm install fp-ts @no-day/fp-ts-graph
 
 ## Docs
 
-[API](https://no-day.github.io/fp-ts-graph/modules/index.ts.html)
+[API Docs](https://no-day.github.io/fp-ts-graph/modules/index.ts.html)
 
 ## Examples
 
@@ -144,3 +148,20 @@ chromium graph.svg
 ```
 
 <img src="./graph.svg"/>
+
+## TO DO
+
+- Finish test suite
+- Add instances
+  - Functor
+  - Eq
+  - Ord
+  - Foldable
+  - ...
+- Add functions
+  - `deleteNode`
+  - `deleteEdge`
+  - `updateNode`
+  - `updateEdge`
+  - topological sort
+  - ...
