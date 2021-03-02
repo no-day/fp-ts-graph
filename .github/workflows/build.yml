@@ -21,7 +21,7 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - run: yarn install
-      - run: yarn run build
+      - run: yarn build
       - run: yarn test
 
   deploy-docs:
@@ -33,7 +33,7 @@ jobs:
       - name: Install and Build
         run: |
           yarn install
-          yarn run build
+          yarn build
           yarn test
           yarn docs
       - name: Deploy
