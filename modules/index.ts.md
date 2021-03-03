@@ -17,6 +17,7 @@ Added in v0.1.0
   - [insertNode](#insertnode)
   - [map](#map)
   - [mapEdge](#mapedge)
+  - [mapNode](#mapnode)
 - [Constructors](#constructors)
   - [empty](#empty)
 - [Debug](#debug)
@@ -28,6 +29,7 @@ Added in v0.1.0
 - [Instances](#instances)
   - [getEqEdgeId](#geteqedgeid)
 - [Model](#model)
+  - [Direction (type alias)](#direction-type-alias)
   - [Graph (interface)](#graph-interface)
   - [default](#default)
 
@@ -118,6 +120,8 @@ Added in v0.1.0
 
 ## map
 
+Alias for `mapNode`.
+
 **Signature**
 
 ```ts
@@ -130,12 +134,28 @@ Added in v0.1.0
 
 ## mapEdge
 
+Maps over the graph's edges
+
 **Signature**
 
 ```ts
 export declare const mapEdge: <Edge1, Edge2>(
   fn: (edge: Edge1) => Edge2
 ) => <Id, Node>(graph: Graph<Id, Edge1, Node>) => Graph<Id, Edge2, Node>
+```
+
+Added in v0.1.0
+
+## mapNode
+
+Maps over the graph's nodes.
+
+**Signature**
+
+```ts
+export declare const mapNode: <Node1, Node2>(
+  fn: (node: Node1) => Node2
+) => <Id, Edge>(graph: Graph<Id, Edge, Node1>) => Graph<Id, Edge, Node2>
 ```
 
 Added in v0.1.0
@@ -172,6 +192,15 @@ Added in v0.1.0
 
 ## toDotFile
 
+For debugging purpose we provide a simple and dependency free dot file
+generator as its sort of the standard CLI tool to layout graphs visually. See
+[graphviz](https://graphviz.org) for more details.
+
+If your your edges and nodes are not of type string, you can use `mapEdge`
+and `mapNode` to convert them. That's not possible with the id, as it would
+possible change the structure of the graph, thus you need to provide a
+function that stringifies the ids.
+
 **Signature**
 
 ```ts
@@ -184,10 +213,13 @@ Added in v0.1.0
 
 ## edgeEntries
 
+Get edges as "edge id"-"value" pairs. As currently multi-edges are not
+supported, we use node connections as edge ids.
+
 **Signature**
 
 ```ts
-export declare const edgeEntries: <Id, Edge, Node>(graph: Graph<Id, Edge, Node>) => [EdgeId<Id>, Edge][]
+export declare const edgeEntries: <Id, Edge, Node>(graph: Graph<Id, Edge, Node>) => [Direction<Id>, Edge][]
 ```
 
 Added in v0.1.0
@@ -199,12 +231,14 @@ Added in v0.1.0
 ```ts
 export declare const entries: <Id, Edge, Node>(
   graph: Graph<Id, Edge, Node>
-) => { nodes: [Id, Node][]; edges: [EdgeId<Id>, Edge][] }
+) => { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] }
 ```
 
 Added in v0.1.0
 
 ## nodeEntries
+
+Get nodes as "id"-"value" pairs
 
 **Signature**
 
@@ -221,12 +255,24 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const getEqEdgeId: <Id>(E: Eq<Id>) => Eq<EdgeId<Id>>
+export declare const getEqEdgeId: <Id>(E: Eq<Id>) => Eq<Direction<Id>>
 ```
 
 Added in v0.1.0
 
 # Model
+
+## Direction (type alias)
+
+A general type that describes a directed connection from an origin to a target
+
+**Signature**
+
+```ts
+export type Direction<T> = { from: T; to: T }
+```
+
+Added in v0.1.0
 
 ## Graph (interface)
 
@@ -243,7 +289,7 @@ but those details may become opaque in the future.
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol
   readonly nodes: Map<Id, NodeContext<Id, Node>>
-  readonly edges: Map<EdgeId<Id>, Edge>
+  readonly edges: Map<Direction<Id>, Edge>
 }
 ```
 
