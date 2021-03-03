@@ -16,7 +16,7 @@ Added in v0.1.0
   - [insertEdge](#insertedge)
   - [insertNode](#insertnode)
   - [map](#map)
-  - [mapEdges](#mapedges)
+  - [mapEdge](#mapedge)
 - [Constructors](#constructors)
   - [empty](#empty)
 - [Debug](#debug)
@@ -128,12 +128,12 @@ export declare const map: <Node1, Node2>(
 
 Added in v0.1.0
 
-## mapEdges
+## mapEdge
 
 **Signature**
 
 ```ts
-export declare const mapEdges: <Edge1, Edge2>(
+export declare const mapEdge: <Edge1, Edge2>(
   fn: (edge: Edge1) => Edge2
 ) => <Id, Node>(graph: Graph<Id, Edge1, Node>) => Graph<Id, Edge2, Node>
 ```
