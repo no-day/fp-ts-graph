@@ -26,7 +26,8 @@
     "build": "tsc",
     "prepublish": "yarn build",
     "docs": "yarn docs-ts",
-    "test": "yarn jest"
+    "test": "yarn jest",
+    "doctoc": "yarn doctoc"
   },
   "dependencies": {
     "prettier-plugin-jsdoc": "^0.3.12"

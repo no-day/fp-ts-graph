@@ -169,15 +169,19 @@ chromium graph.svg
 
 - Finish test suite
 - Add instances
-  - Functor
-  - Eq
-  - Ord
-  - Foldable
+  - `Functor`
+  - `Eq`
+  - `Ord`
+  - `Foldable`
   - ...
 - Add functions
   - `deleteNode`
   - `deleteEdge`
   - `updateNode`
   - `updateEdge`
-  - topological sort
+  - `lookupNode`
+  - `lookupEdge`
+  - `outgoingIds`
+  - `incomingIds`
+  - `topologicalSort`
   - ...
