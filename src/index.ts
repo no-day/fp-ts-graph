@@ -180,10 +180,7 @@ export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
  * @since 0.1.0
  * @category Combinators
  */
-export const mapEdges = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <
-  Id,
-  Node
->(
+export const mapEdge = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <Id, Node>(
   graph: Graph<Id, Edge1, Node>
 ): Graph<Id, Edge2, Node> =>
   unsafeMkGraph({

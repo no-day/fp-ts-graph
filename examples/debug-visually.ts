@@ -11,7 +11,7 @@ fp.function.pipe(
   fp.option.map(
     fp.function.flow(
       // Then turn the edges into strings
-      graph.mapEdges(({ items }) => items.join(', ')),
+      graph.mapEdge(({ items }) => items.join(', ')),
 
       // The same we do with the nodes
       graph.map(
