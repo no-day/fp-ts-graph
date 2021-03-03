@@ -2,7 +2,9 @@
 
 Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti/fp-ts).
 
-The graph is directed and cyclic.
+The graph is directed and cyclic. Currently multi-edges are not allowed.
+
+In the future a granular distinction of graph qualities may be supported, see roadmap.
 
 ```ts
 type Graph<Id, Edge, Node> = ...
@@ -167,7 +169,6 @@ chromium graph.svg
 
 ## Roadmap / to do
 
-- Finish test suite
 - Add instances
   - `Functor`
   - `Eq`
@@ -183,5 +184,10 @@ chromium graph.svg
   - `lookupEdge`
   - `outgoingIds`
   - `incomingIds`
+  - `mapEdgeWithIndex`
+  - `mapWithIndex`
   - `topologicalSort`
   - ...
+- Ideas
+  - Represent different qualities of a graph on the type level
+    Like: Graph<{directed: true, multiEdge: true, cyclic: false}, Id, Edge, Node>

@@ -71,6 +71,34 @@ describe('index', () => {
       );
     });
 
+    it('should insert an edges in both directions between two nodes', () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n2', 'n1', 'Edge 2')
+          ),
+          fp.option.map(graph.entries)
+        ),
+        fp.option.some({
+          nodes: [
+            ['n1', 'Node 1'],
+            ['n2', 'Node 2'],
+          ],
+          edges: [
+            [{ from: 'n1', to: 'n2' }, 'Edge 1'],
+            [{ from: 'n2', to: 'n1' }, 'Edge 2'],
+          ],
+        })
+      );
+    });
+
     it('should insert an edge from a node to itself', () => {
       deepStrictEqual(
         fp.function.pipe(
@@ -95,6 +123,167 @@ describe('index', () => {
           fp.option.map(graph.entries)
         ),
         fp.option.none
+      );
+    });
+  });
+
+  describe('mapEdge', () => {
+    it("should map edge's type and values", () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, number, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          graph.insertNode(fp.eq.eqString)('n3', 'Node 3'),
+          fp.option.of,
+          fp.option.chain(graph.insertEdge(fp.eq.eqString)('n1', 'n2', 1)),
+          fp.option.chain(graph.insertEdge(fp.eq.eqString)('n2', 'n3', 2)),
+          fp.option.map(graph.mapEdge((n) => `Edge ${n}`)),
+          fp.option.map(graph.entries)
+        ),
+        fp.option.some({
+          nodes: [
+            ['n1', 'Node 1'],
+            ['n2', 'Node 2'],
+            ['n3', 'Node 3'],
+          ],
+          edges: [
+            [{ from: 'n1', to: 'n2' }, 'Edge 1'],
+            [{ from: 'n2', to: 'n3' }, 'Edge 2'],
+          ],
+        })
+      );
+    });
+  });
+
+  describe('mapNode', () => {
+    it("should map nodes's type and values", () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, number>(),
+          graph.insertNode(fp.eq.eqString)('n1', 1),
+          graph.insertNode(fp.eq.eqString)('n2', 2),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.map(graph.mapNode((n) => `Node ${n}`)),
+          fp.option.map(graph.entries)
+        ),
+        fp.option.some({
+          nodes: [
+            ['n1', 'Node 1'],
+            ['n2', 'Node 2'],
+          ],
+          edges: [[{ from: 'n1', to: 'n2' }, 'Edge 1']],
+        })
+      );
+    });
+  });
+
+  describe('nodeEntries', () => {
+    it('should return all node entries (ids and values)', () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.map(graph.nodeEntries)
+        ),
+        fp.option.some([
+          ['n1', 'Node 1'],
+          ['n2', 'Node 2'],
+        ])
+      );
+    });
+  });
+
+  describe('edgeEntries', () => {
+    it('should return all edge entries (edge ids and values)', () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          graph.insertNode(fp.eq.eqString)('n3', 'Node 3'),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n2', 'n3', 'Edge 2')
+          ),
+          fp.option.map(graph.mapNode((n) => `Node ${n}`)),
+          fp.option.map(graph.edgeEntries)
+        ),
+        fp.option.some([
+          [{ from: 'n1', to: 'n2' }, 'Edge 1'],
+          [{ from: 'n2', to: 'n3' }, 'Edge 2'],
+        ])
+      );
+    });
+  });
+
+  describe('edgeEntries', () => {
+    it('should return all node and edge entries', () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          graph.insertNode(fp.eq.eqString)('n3', 'Node 3'),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n2', 'n3', 'Edge 2')
+          ),
+          fp.option.map(graph.entries)
+        ),
+        fp.option.some({
+          nodes: [
+            ['n1', 'Node 1'],
+            ['n2', 'Node 2'],
+            ['n3', 'Node 3'],
+          ],
+          edges: [
+            [{ from: 'n1', to: 'n2' }, 'Edge 1'],
+            [{ from: 'n2', to: 'n3' }, 'Edge 2'],
+          ],
+        })
+      );
+    });
+  });
+
+  describe('toDotFile', () => {
+    it('should generate a valid dot file', () => {
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
+          graph.insertNode(fp.eq.eqString)('n2', 'Node 2'),
+          graph.insertNode(fp.eq.eqString)('n3', 'Node 3'),
+          fp.option.of,
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1')
+          ),
+          fp.option.chain(
+            graph.insertEdge(fp.eq.eqString)('n2', 'n3', 'Edge 2')
+          ),
+          fp.option.map(graph.toDotFile(fp.function.identity))
+        ),
+        fp.option.some(`digraph {
+"n1" [label="Node 1"]
+"n2" [label="Node 2"]
+"n3" [label="Node 3"]
+"n1" -> "n2" [label="Edge 1"]
+"n2" -> "n3" [label="Edge 2"]
+}`)
       );
     });
   });

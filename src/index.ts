@@ -27,7 +27,7 @@ import { Eq, eqString, getStructEq } from 'fp-ts/Eq';
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
   readonly nodes: Map<Id, NodeContext<Id, Node>>;
-  readonly edges: Map<EdgeId<Id>, Edge>;
+  readonly edges: Map<Direction<Id>, Edge>;
 }
 
 export {
@@ -38,13 +38,19 @@ export {
   Graph as default,
 };
 
+/**
+ * A general type that describes a directed connection from an origin to a target
+ *
+ * @since 0.1.0
+ * @category Model
+ */
+export type Direction<T> = { from: T; to: T };
+
 type NodeContext<Id, Node> = {
   data: Node;
   outgoing: Set<Id>;
   incoming: Set<Id>;
 };
-
-type EdgeId<Id> = { from: Id; to: Id };
 
 // -------------------------------------------------------------------------------------
 // constructors
@@ -177,6 +183,8 @@ export const insertEdge = <Id>(E: Eq<Id>) => <Edge>(
   );
 
 /**
+ * Maps over the graph's edges
+ *
  * @since 0.1.0
  * @category Combinators
  */
@@ -189,10 +197,12 @@ export const mapEdge = <Edge1, Edge2>(fn: (edge: Edge1) => Edge2) => <Id, Node>(
   });
 
 /**
+ * Maps over the graph's nodes.
+ *
  * @since 0.1.0
  * @category Combinators
  */
-export const map = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
+export const mapNode = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
   graph: Graph<Id, Edge, Node1>
 ): Graph<Id, Edge, Node2> =>
   unsafeMkGraph({
@@ -207,11 +217,21 @@ export const map = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
     edges: graph.edges,
   });
 
+/**
+ * Alias for `mapNode`.
+ *
+ * @since 0.1.0
+ * @category Combinators
+ */
+export const map = mapNode;
+
 // -------------------------------------------------------------------------------------
 // destructors
 // -------------------------------------------------------------------------------------
 
 /**
+ * Get nodes as "id"-"value" pairs
+ *
  * @since 0.1.0
  * @category Destructors
  */
@@ -225,12 +245,15 @@ export const nodeEntries = <Id, Edge, Node>(
   );
 
 /**
+ * Get edges as "edge id"-"value" pairs. As currently multi-edges are not
+ * supported, we use node connections as edge ids.
+ *
  * @since 0.1.0
  * @category Destructors
  */
 export const edgeEntries = <Id, Edge, Node>(
   graph: Graph<Id, Edge, Node>
-): [EdgeId<Id>, Edge][] => pipe(graph.edges, mapEntries);
+): [Direction<Id>, Edge][] => pipe(graph.edges, mapEntries);
 
 /**
  * @since 0.1.0
@@ -238,7 +261,7 @@ export const edgeEntries = <Id, Edge, Node>(
  */
 export const entries = <Id, Edge, Node>(
   graph: Graph<Id, Edge, Node>
-): { nodes: [Id, Node][]; edges: [EdgeId<Id>, Edge][] } => ({
+): { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] } => ({
   nodes: nodeEntries(graph),
   edges: edgeEntries(graph),
 });
@@ -248,6 +271,15 @@ export const entries = <Id, Edge, Node>(
 // -------------------------------------------------------------------------------------
 
 /**
+ * For debugging purpose we provide a simple and dependency free dot file
+ * generator as its sort of the standard CLI tool to layout graphs visually. See
+ * [graphviz](https://graphviz.org) for more details.
+ *
+ * If your your edges and nodes are not of type string, you can use `mapEdge`
+ * and `mapNode` to convert them. That's not possible with the id, as it would
+ * possible change the structure of the graph, thus you need to provide a
+ * function that stringifies the ids.
+ *
  * @since 0.1.0
  * @category Debug
  */
@@ -280,7 +312,7 @@ export const toDotFile = <Id>(printId: (id: Id) => string) => (
  * @since 0.1.0
  * @category Instances
  */
-export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<EdgeId<Id>> =>
+export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<Direction<Id>> =>
   getStructEq({ from: E, to: E });
 
 // -------------------------------------------------------------------------------------
