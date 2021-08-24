@@ -4,7 +4,7 @@ import { pipe } from 'fp-ts/function';
 import * as map_ from 'fp-ts/Map';
 import * as array from 'fp-ts/Array';
 import * as option from 'fp-ts/Option';
-import { Option } from 'fp-ts/Option';
+import { Option, map as optionMap } from 'fp-ts/Option';
 import * as set_ from 'fp-ts/Set';
 import { Eq, getStructEq } from 'fp-ts/Eq';
 
@@ -223,6 +223,39 @@ export const mapNode = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
  * @category Combinators
  */
 export const map = mapNode;
+
+/**
+ * Retrieves a node from the graph.
+ *
+ * @since 0.2.0
+ * @category Combinators
+ * @example
+ *   import Graph, * as graph from '@no-day/fp-ts-graph';
+ *   import * as fp from 'fp-ts';
+ *
+ *   type MyGraph = Graph<string, string, string>;
+ *
+ *   const myGraph: MyGraph = fp.function.pipe(
+ *     graph.empty<string, string, string>(),
+ *     graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+ *     graph.insertNode(fp.string.Eq)('n2', 'Node 2')
+ *   );
+ *
+ *   assert.deepStrictEqual(
+ *     fp.function.pipe(
+ *       myGraph,
+ *       graph.lookupNode(fp.string.Eq)('n2'),
+ *     ),
+ *     fp.option.some('Node2')
+ *   );
+ */
+export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>
+  <Edge, Node>(graph: Graph<Id, Edge, Node>): Option<Node> =>
+    pipe(
+      graph.nodes,
+      map_.lookup(E)(id),
+      optionMap((node) => node.data)
+    )
 
 // -------------------------------------------------------------------------------------
 // destructors
