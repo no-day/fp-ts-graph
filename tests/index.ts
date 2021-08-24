@@ -288,27 +288,29 @@ describe('index', () => {
     });
   });
 
-  describe('lookupNode', () => {
-    it('should return existing node value', () => {
-      deepStrictEqual(
-        fp.function.pipe(
-          graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.lookupNode(fp.string.Eq)('n1')
-        ),
-        fp.option.some('Node 1')
-      )
-    })
+  describe('Utils', () => {
+    describe('lookupNode', () => {
+      it('should return existing node value', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.lookupNode(fp.string.Eq)('n1')
+          ),
+          fp.option.some('Node 1')
+        )
+      })
 
-    it('should lookup none for non-existing node', () => {
-      deepStrictEqual(
-        fp.function.pipe(
-          graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.lookupNode(fp.string.Eq)('n2')
-        ),
-        fp.option.none
-      )
-    })
+      it('should lookup none for non-existing node', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.lookupNode(fp.string.Eq)('n2')
+          ),
+          fp.option.none
+        )
+      })
+    });
   });
 });

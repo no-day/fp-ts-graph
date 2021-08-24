@@ -224,11 +224,15 @@ export const mapNode = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
  */
 export const map = mapNode;
 
+// -------------------------------------------------------------------------------------
+// utils
+// -------------------------------------------------------------------------------------
+
 /**
  * Retrieves a node from the graph.
  *
  * @since 0.2.0
- * @category Combinators
+ * @category Utils
  * @example
  *   import Graph, * as graph from '@no-day/fp-ts-graph';
  *   import * as fp from 'fp-ts';
