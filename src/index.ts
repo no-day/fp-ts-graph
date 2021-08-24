@@ -3,11 +3,10 @@
 import { pipe } from 'fp-ts/function';
 import * as map_ from 'fp-ts/Map';
 import * as array from 'fp-ts/Array';
-import * as tuple from 'fp-ts/Tuple';
 import * as option from 'fp-ts/Option';
 import { Option } from 'fp-ts/Option';
 import * as set_ from 'fp-ts/Set';
-import { Eq, eqString, getStructEq } from 'fp-ts/Eq';
+import { Eq, getStructEq } from 'fp-ts/Eq';
 
 // -------------------------------------------------------------------------------------
 // model
