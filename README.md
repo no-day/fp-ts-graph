@@ -184,8 +184,6 @@ chromium graph.svg
 - Add functions
   - `deleteNode`
   - `deleteEdge`
-  - `updateNode`
-  - `updateEdge`
   - `outgoingIds`
   - `incomingIds`
   - `mapEdgeWithIndex`
