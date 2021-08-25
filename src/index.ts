@@ -4,7 +4,7 @@ import { pipe } from 'fp-ts/function';
 import * as map_ from 'fp-ts/Map';
 import * as array from 'fp-ts/Array';
 import * as option from 'fp-ts/Option';
-import { Option, map as optionMap } from 'fp-ts/Option';
+import { Option } from 'fp-ts/Option';
 import * as set_ from 'fp-ts/Set';
 import { Eq, getStructEq } from 'fp-ts/Eq';
 
@@ -258,8 +258,43 @@ export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>
     pipe(
       graph.nodes,
       map_.lookup(E)(id),
-      optionMap((node) => node.data)
-    )
+      option.map((node) => node.data)
+    );
+
+/**
+ * Retrieves a node from the graph.
+ *
+ * @since 0.2.0
+ * @category Utils
+ * @example
+ *   import Graph, * as graph from '@no-day/fp-ts-graph';
+ *   import * as fp from 'fp-ts';
+ *
+ *   type MyGraph = Graph<string, string, string>;
+ *
+ *   const myGraph: MyGraph = fp.function.pipe(
+ *     graph.empty<string, string, string>(),
+ *     graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+ *     graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+ *     fp.option.of,
+ *     fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+ *     fp.option.getOrElse(() => graph.empty<string, string, string>())
+ *   );
+ *
+ *   assert.deepStrictEqual(
+ *     fp.function.pipe(
+ *       myGraph,
+ *       graph.lookupEdge(fp.string.Eq)('n1', 'n2'),
+ *     ),
+ *     fp.option.some('Edge 1')
+ *   );
+ */
+export const lookupEdge = <Id>(E: Eq<Id>) => (from: Id, to: Id) =>
+  <Edge, Node>(graph: Graph<Id, Edge, Node>): Option<Edge> =>
+    pipe(
+      graph.edges,
+      map_.lookup(getEqEdgeId(E))({ from, to })
+    );
 
 // -------------------------------------------------------------------------------------
 // destructors

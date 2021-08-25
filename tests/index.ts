@@ -312,5 +312,51 @@ describe('index', () => {
         )
       })
     });
+
+    describe('lookupEdge', () => {
+      it('should return existing edge', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+            fp.option.of,
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+            ),
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
+            ),
+            fp.option.chain(
+              graph.lookupEdge(fp.string.Eq)('n1', 'n2')
+            )
+          ),
+          fp.option.some('Edge 1')
+        )
+      })
+
+      it('should return none for non-existing edge', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+            fp.option.of,
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+            ),
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
+            ),
+            fp.option.chain(
+              graph.lookupEdge(fp.string.Eq)('n3', 'n2')
+            )
+          ),
+          fp.option.none
+        )
+      })
+    })
   });
 });

@@ -186,7 +186,6 @@ chromium graph.svg
   - `deleteEdge`
   - `updateNode`
   - `updateEdge`
-  - `lookupEdge`
   - `outgoingIds`
   - `incomingIds`
   - `mapEdgeWithIndex`
