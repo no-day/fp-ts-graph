@@ -49,6 +49,83 @@ describe('index', () => {
         );
       });
     });
+
+    describe("updateEdge", () => {
+      it("should update an existing edge", () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            fp.option.of,
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+            ),
+            fp.option.chain(
+              graph.updateEdge(fp.string.Eq)('n1', 'n2',
+                (e) => `${e} updated`)
+            ),
+            fp.option.map(graph.edgeEntries)
+          ),
+          fp.option.some([
+            [{ from: 'n1', to: 'n2' }, 'Edge 1 updated']
+          ])
+        );
+      });
+
+      it("should not update a non-existing edge", () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            fp.option.of,
+            fp.option.chain(
+              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+            ),
+            fp.option.chain(
+              graph.updateEdge(fp.string.Eq)('n2', 'n1',
+                (e) => `${e} updated`)
+            ),
+            fp.option.map(graph.edgeEntries)
+          ),
+          fp.option.none
+        );
+      });
+    })
+
+    describe("updateNode", () => {
+      it("should update an existing node", () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.updateNode(fp.string.Eq)('n2',
+              (n) => `${n} updated`),
+            fp.option.map(graph.nodeEntries)
+          ),
+          fp.option.some([
+            ['n1', 'Node 1'],
+            ['n2', 'Node 2 updated']
+          ])
+        );
+      });
+
+      it("shouldn't update a non-existing node", () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.updateNode(fp.string.Eq)('n3',
+              (n) => `${n} updated`),
+            fp.option.map(graph.nodeEntries)
+          ),
+          fp.option.none
+        );
+      });
+    })
   });
 
   describe('insertEdge', () => {
@@ -289,32 +366,8 @@ describe('index', () => {
   });
 
   describe('Utils', () => {
-    describe('lookupNode', () => {
-      it('should return existing node value', () => {
-        deepStrictEqual(
-          fp.function.pipe(
-            graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.lookupNode(fp.string.Eq)('n1')
-          ),
-          fp.option.some('Node 1')
-        )
-      })
-
-      it('should lookup none for non-existing node', () => {
-        deepStrictEqual(
-          fp.function.pipe(
-            graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.lookupNode(fp.string.Eq)('n2')
-          ),
-          fp.option.none
-        )
-      })
-    });
-
     describe('lookupEdge', () => {
-      it('should return existing edge', () => {
+      it('should return an existing edge', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
@@ -358,5 +411,29 @@ describe('index', () => {
         )
       })
     })
+
+    describe('lookupNode', () => {
+      it('should return an existing node value', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.lookupNode(fp.string.Eq)('n1')
+          ),
+          fp.option.some('Node 1')
+        )
+      })
+
+      it('should lookup none for non-existing node', () => {
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+            graph.lookupNode(fp.string.Eq)('n2')
+          ),
+          fp.option.none
+        )
+      })
+    });
   });
 });

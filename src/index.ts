@@ -224,42 +224,45 @@ export const mapNode = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
  */
 export const map = mapNode;
 
+/**
+ * Updates a single edge in the graph.
+ *
+ * @since 0.2.0
+ * @category Combinators
+ */
+export const updateEdge = <Id>(E: Eq<Id>) =>
+  <Edge>(from: Id, to: Id, update: (e: Edge) => Edge) =>
+    <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+      pipe(
+        graph.edges,
+        map_.modifyAt(getEqEdgeId(E))({ from, to }, update),
+        option.map((edges) =>
+          unsafeMkGraph({ nodes: graph.nodes, edges })
+        )
+      );
+
+/**
+ * Updates a single node in the graph.
+ *
+ * @since 0.2.0
+ * @category Combinators
+ */
+export const updateNode = <Id>(E: Eq<Id>) =>
+  <Node>(id: Id, update: (n: Node) => Node) =>
+    <Edge>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+      pipe(
+        graph.nodes,
+        map_.modifyAt(E)(id, ({ incoming, outgoing, data }) => ({
+          incoming, outgoing, data: update(data)
+        })),
+        option.map((nodes) =>
+          unsafeMkGraph({ nodes, edges: graph.edges })
+        )
+      );
+
 // -------------------------------------------------------------------------------------
 // utils
 // -------------------------------------------------------------------------------------
-
-/**
- * Retrieves a node from the graph.
- *
- * @since 0.2.0
- * @category Utils
- * @example
- *   import Graph, * as graph from '@no-day/fp-ts-graph';
- *   import * as fp from 'fp-ts';
- *
- *   type MyGraph = Graph<string, string, string>;
- *
- *   const myGraph: MyGraph = fp.function.pipe(
- *     graph.empty<string, string, string>(),
- *     graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
- *     graph.insertNode(fp.string.Eq)('n2', 'Node 2')
- *   );
- *
- *   assert.deepStrictEqual(
- *     fp.function.pipe(
- *       myGraph,
- *       graph.lookupNode(fp.string.Eq)('n2'),
- *     ),
- *     fp.option.some('Node2')
- *   );
- */
-export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>
-  <Edge, Node>(graph: Graph<Id, Edge, Node>): Option<Node> =>
-    pipe(
-      graph.nodes,
-      map_.lookup(E)(id),
-      option.map((node) => node.data)
-    );
 
 /**
  * Retrieves a node from the graph.
@@ -290,10 +293,43 @@ export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>
  *   );
  */
 export const lookupEdge = <Id>(E: Eq<Id>) => (from: Id, to: Id) =>
-  <Edge, Node>(graph: Graph<Id, Edge, Node>): Option<Edge> =>
+  <Edge>(graph: Graph<Id, Edge, unknown>): Option<Edge> =>
     pipe(
       graph.edges,
       map_.lookup(getEqEdgeId(E))({ from, to })
+    );
+
+/**
+ * Retrieves a node from the graph.
+ *
+ * @since 0.2.0
+ * @category Utils
+ * @example
+ *   import Graph, * as graph from '@no-day/fp-ts-graph';
+ *   import * as fp from 'fp-ts';
+ *
+ *   type MyGraph = Graph<string, string, string>;
+ *
+ *   const myGraph: MyGraph = fp.function.pipe(
+ *     graph.empty<string, string, string>(),
+ *     graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+ *     graph.insertNode(fp.string.Eq)('n2', 'Node 2')
+ *   );
+ *
+ *   assert.deepStrictEqual(
+ *     fp.function.pipe(
+ *       myGraph,
+ *       graph.lookupNode(fp.string.Eq)('n2'),
+ *     ),
+ *     fp.option.some('Node2')
+ *   );
+ */
+export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>
+  <Node>(graph: Graph<Id, unknown, Node>): Option<Node> =>
+    pipe(
+      graph.nodes,
+      map_.lookup(E)(id),
+      option.map((node) => node.data)
     );
 
 // -------------------------------------------------------------------------------------
