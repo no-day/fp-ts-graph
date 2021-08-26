@@ -18,6 +18,8 @@ Added in v0.1.0
   - [map](#map)
   - [mapEdge](#mapedge)
   - [mapNode](#mapnode)
+  - [modifyAtEdge](#modifyatedge)
+  - [modifyAtNode](#modifyatnode)
 - [Constructors](#constructors)
   - [empty](#empty)
 - [Debug](#debug)
@@ -32,6 +34,9 @@ Added in v0.1.0
   - [Direction (type alias)](#direction-type-alias)
   - [Graph (interface)](#graph-interface)
   - [default](#default)
+- [Utils](#utils)
+  - [lookupEdge](#lookupedge)
+  - [lookupNode](#lookupnode)
 
 ---
 
@@ -159,6 +164,41 @@ export declare const mapNode: <Node1, Node2>(
 ```
 
 Added in v0.1.0
+
+## modifyAtEdge
+
+Modifies a single edge in the graph.
+
+**Signature**
+
+```ts
+export declare const modifyAtEdge: <Id>(
+  E: Eq<Id>
+) => <Edge>(
+  from: Id,
+  to: Id,
+  update: (e: Edge) => Edge
+) => <Node>(graph: Graph<Id, Edge, Node>) => option.Option<Graph<Id, Edge, Node>>
+```
+
+Added in v0.2.0
+
+## modifyAtNode
+
+Modifies a single node in the graph.
+
+**Signature**
+
+```ts
+export declare const modifyAtNode: <Id>(
+  E: Eq<Id>
+) => <Node>(
+  id: Id,
+  update: (n: Node) => Node
+) => <Edge>(graph: Graph<Id, Edge, Node>) => option.Option<Graph<Id, Edge, Node>>
+```
+
+Added in v0.2.0
 
 # Constructors
 
@@ -304,3 +344,70 @@ export declare const default: any
 ```
 
 Added in v0.1.0
+
+# Utils
+
+## lookupEdge
+
+Retrieves an edge from the graph.
+
+**Signature**
+
+```ts
+export declare const lookupEdge: <Id>(
+  E: Eq<Id>
+) => (from: Id, to: Id) => <Edge>(graph: Graph<Id, Edge, unknown>) => option.Option<Edge>
+```
+
+**Example**
+
+```ts
+import Graph, * as graph from '@no-day/fp-ts-graph'
+import * as fp from 'fp-ts'
+
+type MyGraph = Graph<string, string, string>
+
+const myGraph: MyGraph = fp.function.pipe(
+  graph.empty<string, string, string>(),
+  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+  graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+  fp.option.of,
+  fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+  fp.option.getOrElse(() => graph.empty<string, string, string>())
+)
+
+assert.deepStrictEqual(fp.function.pipe(myGraph, graph.lookupEdge(fp.string.Eq)('n1', 'n2')), fp.option.some('Edge 1'))
+```
+
+Added in v0.2.0
+
+## lookupNode
+
+Retrieves a node from the graph.
+
+**Signature**
+
+```ts
+export declare const lookupNode: <Id>(
+  E: Eq<Id>
+) => (id: Id) => <Node>(graph: Graph<Id, unknown, Node>) => option.Option<Node>
+```
+
+**Example**
+
+```ts
+import Graph, * as graph from '@no-day/fp-ts-graph'
+import * as fp from 'fp-ts'
+
+type MyGraph = Graph<string, string, string>
+
+const myGraph: MyGraph = fp.function.pipe(
+  graph.empty<string, string, string>(),
+  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+  graph.insertNode(fp.string.Eq)('n2', 'Node 2')
+)
+
+assert.deepStrictEqual(fp.function.pipe(myGraph, graph.lookupNode(fp.string.Eq)('n2')), fp.option.some('Node 2'))
+```
+
+Added in v0.2.0
