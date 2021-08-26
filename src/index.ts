@@ -225,12 +225,12 @@ export const mapNode = <Node1, Node2>(fn: (node: Node1) => Node2) => <Id, Edge>(
 export const map = mapNode;
 
 /**
- * Updates a single edge in the graph.
+ * Modifies a single edge in the graph.
  *
  * @since 0.2.0
  * @category Combinators
  */
-export const updateEdge = <Id>(E: Eq<Id>) =>
+export const modifyAtEdge = <Id>(E: Eq<Id>) =>
   <Edge>(from: Id, to: Id, update: (e: Edge) => Edge) =>
     <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
       pipe(
@@ -242,12 +242,12 @@ export const updateEdge = <Id>(E: Eq<Id>) =>
       );
 
 /**
- * Updates a single node in the graph.
+ * Modifies a single node in the graph.
  *
  * @since 0.2.0
  * @category Combinators
  */
-export const updateNode = <Id>(E: Eq<Id>) =>
+export const modifyAtNode = <Id>(E: Eq<Id>) =>
   <Node>(id: Id, update: (n: Node) => Node) =>
     <Edge>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
       pipe(
@@ -265,7 +265,7 @@ export const updateNode = <Id>(E: Eq<Id>) =>
 // -------------------------------------------------------------------------------------
 
 /**
- * Retrieves a node from the graph.
+ * Retrieves an edge from the graph.
  *
  * @since 0.2.0
  * @category Utils
@@ -321,7 +321,7 @@ export const lookupEdge = <Id>(E: Eq<Id>) => (from: Id, to: Id) =>
  *       myGraph,
  *       graph.lookupNode(fp.string.Eq)('n2'),
  *     ),
- *     fp.option.some('Node2')
+ *     fp.option.some('Node 2')
  *   );
  */
 export const lookupNode = <Id>(E: Eq<Id>) => (id: Id) =>

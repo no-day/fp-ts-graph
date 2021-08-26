@@ -50,8 +50,8 @@ describe('index', () => {
       });
     });
 
-    describe("updateEdge", () => {
-      it("should update an existing edge", () => {
+    describe("modifyAtEdge", () => {
+      it("should modify an existing edge", () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
@@ -62,7 +62,7 @@ describe('index', () => {
               graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.updateEdge(fp.string.Eq)('n1', 'n2',
+              graph.modifyAtEdge(fp.string.Eq)('n1', 'n2',
                 (e) => `${e} updated`)
             ),
             fp.option.map(graph.edgeEntries)
@@ -73,7 +73,7 @@ describe('index', () => {
         );
       });
 
-      it("should not update a non-existing edge", () => {
+      it("should not modify a non-existing edge", () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
@@ -84,7 +84,7 @@ describe('index', () => {
               graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.updateEdge(fp.string.Eq)('n2', 'n1',
+              graph.modifyAtEdge(fp.string.Eq)('n2', 'n1',
                 (e) => `${e} updated`)
             ),
             fp.option.map(graph.edgeEntries)
@@ -94,14 +94,14 @@ describe('index', () => {
       });
     })
 
-    describe("updateNode", () => {
-      it("should update an existing node", () => {
+    describe("modifyAtNode", () => {
+      it("should modify an existing node", () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
             graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
             graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.updateNode(fp.string.Eq)('n2',
+            graph.modifyAtNode(fp.string.Eq)('n2',
               (n) => `${n} updated`),
             fp.option.map(graph.nodeEntries)
           ),
@@ -112,13 +112,13 @@ describe('index', () => {
         );
       });
 
-      it("shouldn't update a non-existing node", () => {
+      it("shouldn't modify a non-existing node", () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
             graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
             graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.updateNode(fp.string.Eq)('n3',
+            graph.modifyAtNode(fp.string.Eq)('n3',
               (n) => `${n} updated`),
             fp.option.map(graph.nodeEntries)
           ),
