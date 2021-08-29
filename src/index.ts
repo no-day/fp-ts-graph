@@ -6,7 +6,7 @@ import * as array from 'fp-ts/Array';
 import * as option from 'fp-ts/Option';
 import { Option } from 'fp-ts/Option';
 import * as set_ from 'fp-ts/Set';
-import { Eq, getStructEq } from 'fp-ts/Eq';
+import { Eq, struct } from 'fp-ts/Eq';
 
 // -------------------------------------------------------------------------------------
 // model
@@ -73,8 +73,8 @@ type NodeContext<Id, Node> = {
  */
 export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
-    nodes: map_.empty,
-    edges: map_.empty,
+    nodes: new Map(),
+    edges: new Map(),
   });
 
 // -------------------------------------------------------------------------------------
@@ -121,7 +121,7 @@ export const insertNode = <Id>(E: Eq<Id>) => <Node>(id: Id, data: Node) => <
       option.getOrElse(() =>
         pipe(
           graph.nodes,
-          map_.insertAt(E)(id, {
+          map_.upsertAt(E)(id, {
             data,
             incoming: set_.empty as Set<Id>,
             outgoing: set_.empty as Set<Id>,
@@ -146,14 +146,14 @@ export const insertNode = <Id>(E: Eq<Id>) => <Node>(id: Id, data: Node) => <
  *
  *   const myGraph: MyGraph = fp.function.pipe(
  *     graph.empty<string, string, string>(),
- *     graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
- *     graph.insertNode(fp.eq.eqString)('n2', 'Node 2')
+ *     graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+ *     graph.insertNode(fp.string.Eq)('n2', 'Node 2')
  *   );
  *
  *   assert.deepStrictEqual(
  *     fp.function.pipe(
  *       myGraph,
- *       graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1'),
+ *       graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1'),
  *       fp.option.map(graph.entries)
  *     ),
  *     fp.option.some({
@@ -420,7 +420,7 @@ export const toDotFile = <Id>(printId: (id: Id) => string) => (
  * @category Instances
  */
 export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<Direction<Id>> =>
-  getStructEq({ from: E, to: E });
+  struct({ from: E, to: E });
 
 // -------------------------------------------------------------------------------------
 // internal
@@ -470,4 +470,4 @@ const insertEdgeInEdges = <Id>(E: Eq<Id>) => <Edge>(
 ) => (
   edges: Graph<Id, Edge, unknown>['edges']
 ): Graph<Id, Edge, unknown>['edges'] =>
-  pipe(edges, map_.insertAt(getEqEdgeId(E))({ from, to }, data));
+  pipe(edges, map_.upsertAt(getEqEdgeId(E))({ from, to }, data));
