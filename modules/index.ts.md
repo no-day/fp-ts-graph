@@ -69,12 +69,12 @@ type MyGraph = Graph<string, string, string>
 
 const myGraph: MyGraph = fp.function.pipe(
   graph.empty<string, string, string>(),
-  graph.insertNode(fp.eq.eqString)('n1', 'Node 1'),
-  graph.insertNode(fp.eq.eqString)('n2', 'Node 2')
+  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
+  graph.insertNode(fp.string.Eq)('n2', 'Node 2')
 )
 
 assert.deepStrictEqual(
-  fp.function.pipe(myGraph, graph.insertEdge(fp.eq.eqString)('n1', 'n2', 'Edge 1'), fp.option.map(graph.entries)),
+  fp.function.pipe(myGraph, graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1'), fp.option.map(graph.entries)),
   fp.option.some({
     nodes: [
       ['n1', 'Node 1'],
