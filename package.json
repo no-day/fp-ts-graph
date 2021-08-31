@@ -13,6 +13,7 @@
     "@no-day/fp-ts-graph": "git+https://github.com/no-day/fp-ts-graph",
     "@types/jest": "^27.0.1",
     "@types/node": "^14.14.31",
+    "cspell": "^5.8.2",
     "docs-ts": "^0.6.10",
     "doctoc": "^2.0.1",
     "fp-ts": "^2.11.1",
@@ -23,6 +24,7 @@
     "typescript": "^4.2.4"
   },
   "scripts": {
+    "spell": "yarn cspell '**/*.*'",
     "build": "tsc",
     "prepublish": "yarn build",
     "docs": "yarn docs-ts",
