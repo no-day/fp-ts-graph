@@ -1,31 +1,32 @@
-import * as graph from '../src';
-import * as fp from 'fp-ts';
+import * as G from '../src';
+import * as O from 'fp-ts/Option';
+import { flow, pipe } from 'fp-ts/function';
 
 // We import our graph from the previous section
 import { myGraph } from './build-graph';
 
-fp.function.pipe(
+pipe(
   myGraph,
 
   // We need to map over the graph as it may be invalid
-  fp.option.map(
-    fp.function.flow(
+  O.map(
+    flow(
       // Then turn the edges into strings
-      graph.mapEdge(({ items }) => items.join(', ')),
+      G.mapEdge(({ items }) => items.join(', ')),
 
       // The same we do with the nodes
-      graph.map(
+      G.map(
         ({ firstName, lastName, age }) => `${lastName}, ${firstName} (${age})`
       ),
 
       // For debugging, we generate a simple dot file
-      graph.toDotFile((_) => _.toString())
+      G.toDotFile((_) => _.toString())
     )
   ),
 
   // Depending on if the graph was valid
-  fp.option.fold(
-    // We either print an erroe
+  O.fold(
+    // We either print an error
     () => console.error('invalid graph!'),
 
     // Or output the dot file

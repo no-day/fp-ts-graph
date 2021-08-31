@@ -50,8 +50,8 @@ describe('index', () => {
       });
     });
 
-    describe("modifyAtEdge", () => {
-      it("should modify an existing edge", () => {
+    describe('modifyAtEdge', () => {
+      it('should modify an existing edge', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
@@ -62,18 +62,19 @@ describe('index', () => {
               graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.modifyAtEdge(fp.string.Eq)('n1', 'n2',
-                (e) => `${e} updated`)
+              graph.modifyAtEdge(fp.string.Eq)(
+                'n1',
+                'n2',
+                (e) => `${e} updated`
+              )
             ),
             fp.option.map(graph.edgeEntries)
           ),
-          fp.option.some([
-            [{ from: 'n1', to: 'n2' }, 'Edge 1 updated']
-          ])
+          fp.option.some([[{ from: 'n1', to: 'n2' }, 'Edge 1 updated']])
         );
       });
 
-      it("should not modify a non-existing edge", () => {
+      it('should not modify a non-existing edge', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
@@ -84,30 +85,32 @@ describe('index', () => {
               graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.modifyAtEdge(fp.string.Eq)('n2', 'n1',
-                (e) => `${e} updated`)
+              graph.modifyAtEdge(fp.string.Eq)(
+                'n2',
+                'n1',
+                (e) => `${e} updated`
+              )
             ),
             fp.option.map(graph.edgeEntries)
           ),
           fp.option.none
         );
       });
-    })
+    });
 
-    describe("modifyAtNode", () => {
-      it("should modify an existing node", () => {
+    describe('modifyAtNode', () => {
+      it('should modify an existing node', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
             graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
             graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.modifyAtNode(fp.string.Eq)('n2',
-              (n) => `${n} updated`),
+            graph.modifyAtNode(fp.string.Eq)('n2', (n) => `${n} updated`),
             fp.option.map(graph.nodeEntries)
           ),
           fp.option.some([
             ['n1', 'Node 1'],
-            ['n2', 'Node 2 updated']
+            ['n2', 'Node 2 updated'],
           ])
         );
       });
@@ -118,14 +121,13 @@ describe('index', () => {
             graph.empty<string, string, string>(),
             graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
             graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.modifyAtNode(fp.string.Eq)('n3',
-              (n) => `${n} updated`),
+            graph.modifyAtNode(fp.string.Eq)('n3', (n) => `${n} updated`),
             fp.option.map(graph.nodeEntries)
           ),
           fp.option.none
         );
       });
-    })
+    });
   });
 
   describe('insertEdge', () => {
@@ -155,12 +157,8 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
           graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n2', 'n1', 'Edge 2')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n1', 'Edge 2')),
           fp.option.map(graph.entries)
         ),
         fp.option.some({
@@ -241,9 +239,7 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n1', 1),
           graph.insertNode(fp.string.Eq)('n2', 2),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
           fp.option.map(graph.mapNode((n) => `Node ${n}`)),
           fp.option.map(graph.entries)
         ),
@@ -266,9 +262,7 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
           graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
           fp.option.map(graph.nodeEntries)
         ),
         fp.option.some([
@@ -288,12 +282,8 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
           graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
           fp.option.map(graph.mapNode((n) => `Node ${n}`)),
           fp.option.map(graph.edgeEntries)
         ),
@@ -314,12 +304,8 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
           graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
           fp.option.map(graph.entries)
         ),
         fp.option.some({
@@ -346,12 +332,8 @@ describe('index', () => {
           graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
           graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
-          ),
-          fp.option.chain(
-            graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
-          ),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
           fp.option.map(graph.toDotFile(fp.function.identity))
         ),
         fp.option.some(`digraph {
@@ -381,13 +363,11 @@ describe('index', () => {
             fp.option.chain(
               graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
             ),
-            fp.option.chain(
-              graph.lookupEdge(fp.string.Eq)('n1', 'n2')
-            )
+            fp.option.chain(graph.lookupEdge(fp.string.Eq)('n1', 'n2'))
           ),
           fp.option.some('Edge 1')
-        )
-      })
+        );
+      });
 
       it('should return none for non-existing edge', () => {
         deepStrictEqual(
@@ -403,14 +383,12 @@ describe('index', () => {
             fp.option.chain(
               graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
             ),
-            fp.option.chain(
-              graph.lookupEdge(fp.string.Eq)('n3', 'n2')
-            )
+            fp.option.chain(graph.lookupEdge(fp.string.Eq)('n3', 'n2'))
           ),
           fp.option.none
-        )
-      })
-    })
+        );
+      });
+    });
 
     describe('lookupNode', () => {
       it('should return an existing node value', () => {
@@ -421,8 +399,8 @@ describe('index', () => {
             graph.lookupNode(fp.string.Eq)('n1')
           ),
           fp.option.some('Node 1')
-        )
-      })
+        );
+      });
 
       it('should lookup none for non-existing node', () => {
         deepStrictEqual(
@@ -432,8 +410,8 @@ describe('index', () => {
             graph.lookupNode(fp.string.Eq)('n2')
           ),
           fp.option.none
-        )
-      })
+        );
+      });
     });
   });
 });
