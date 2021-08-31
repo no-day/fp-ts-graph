@@ -73,21 +73,24 @@ export type MyGraph = Graph<MyId, MyEdge, MyNode>;
 ```ts
 // examples/build-graph.ts
 
-import Graph, * as graph from '@no-day/fp-ts-graph';
-import * as fp from 'fp-ts';
+import Graph, * as G from '../src';
+import * as N from 'fp-ts/number';
+import { pipe } from 'fp-ts/function';
+import * as O from 'fp-ts/Option';
+import { Option } from 'fp-ts/Option';
 
 // We import our types from the previous section
 import { MyEdge, MyId, MyNode, MyGraph } from './types';
 
-// To save some wrting, we define partially applied versions of the builder functions
+// To save some writing, we define partially applied versions of the builder functions
 
-const empty = graph.empty<MyId, MyEdge, MyNode>();
-const insertNode = graph.insertNode(fp.eq.eqNumber);
-const insertEdge = graph.insertEdge(fp.eq.eqNumber);
+const empty = G.empty<MyId, MyEdge, MyNode>();
+const insertNode = G.insertNode(N.Eq);
+const insertEdge = G.insertEdge(N.Eq);
 
 // Then, let's fill the graph with Data.
 
-export const myGraph: fp.option.Option<MyGraph> = fp.function.pipe(
+export const myGraph: Option<MyGraph> = pipe(
   // We start out with and empty graph.
   empty,
 
@@ -115,11 +118,11 @@ export const myGraph: fp.option.Option<MyGraph> = fp.function.pipe(
 
   // Then we connect them with edges, which can have data, too
 
-  fp.option.of,
-  fp.option.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  fp.option.chain(insertEdge(1002, 1003, { items: [4] })),
-  fp.option.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  fp.option.chain(insertEdge(1003, 1004, { items: [2, 3] }))
+  O.of,
+  O.chain(insertEdge(1001, 1002, { items: [2, 3] })),
+  O.chain(insertEdge(1002, 1003, { items: [4] })),
+  O.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
+  O.chain(insertEdge(1003, 1004, { items: [2, 3] }))
 );
 ```
 
@@ -128,34 +131,35 @@ export const myGraph: fp.option.Option<MyGraph> = fp.function.pipe(
 ```ts
 // examples/debug-visually.ts
 
-import * as graph from '@no-day/fp-ts-graph';
-import * as fp from 'fp-ts';
+import * as G from '../src';
+import * as O from 'fp-ts/Option';
+import { flow, pipe } from 'fp-ts/function';
 
 // We import our graph from the previous section
 import { myGraph } from './build-graph';
 
-fp.function.pipe(
+pipe(
   myGraph,
 
   // We need to map over the graph as it may be invalid
-  fp.option.map(
-    fp.function.flow(
+  O.map(
+    flow(
       // Then turn the edges into strings
-      graph.mapEdges(({ items }) => items.join(', ')),
+      G.mapEdge(({ items }) => items.join(', ')),
 
       // The same we do with the nodes
-      graph.map(
+      G.map(
         ({ firstName, lastName, age }) => `${lastName}, ${firstName} (${age})`
       ),
 
       // For debugging, we generate a simple dot file
-      graph.toDotFile((_) => _.toString())
+      G.toDotFile((_) => _.toString())
     )
   ),
 
   // Depending on if the graph was valid
-  fp.option.fold(
-    // We either print an erroe
+  O.fold(
+    // We either print an error
     () => console.error('invalid graph!'),
 
     // Or output the dot file
@@ -192,4 +196,4 @@ chromium graph.svg
   - ...
 - Ideas
   - Represent different qualities of a graph on the type level
-    Like: Graph<{directed: true, multiEdge: true, cyclic: false}, Id, Edge, Node>
+    Like: `Graph<{directed: true, multiEdge: true, cyclic: false}, Id, Edge, Node>`
