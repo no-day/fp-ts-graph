@@ -1,6 +1,6 @@
 {
   "name": "@no-day/fp-ts-graph",
-  "version": "0.2.2-dev",
+  "version": "0.2.2",
   "homepage": "https://github.com/no-day/fp-ts-graph",
   "main": "dist/src/index.js",
   "module": "src/index.ts",
