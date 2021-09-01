@@ -52,30 +52,28 @@ the specified start and end node id do exists in the graph.
 ```ts
 export declare const insertEdge: <Id>(
   E: Eq<Id>
-) => <Edge>(
-  from: Id,
-  to: Id,
-  data: Edge
-) => <Node>(graph: Graph<Id, Edge, Node>) => option.Option<Graph<Id, Edge, Node>>
+) => <Edge>(from: Id, to: Id, data: Edge) => <Node>(graph: Graph<Id, Edge, Node>) => O.Option<Graph<Id, Edge, Node>>
 ```
 
 **Example**
 
 ```ts
-import Graph, * as graph from '@no-day/fp-ts-graph'
-import * as fp from 'fp-ts'
+import Graph, * as G from '@no-day/fp-ts-graph'
+import { pipe } from 'fp-ts/function'
+import * as O from 'fp-ts/Option'
+import * as S from 'fp-ts/string'
 
 type MyGraph = Graph<string, string, string>
 
-const myGraph: MyGraph = fp.function.pipe(
-  graph.empty<string, string, string>(),
-  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-  graph.insertNode(fp.string.Eq)('n2', 'Node 2')
+const myGraph: MyGraph = pipe(
+  G.empty<string, string, string>(),
+  G.insertNode(S.Eq)('n1', 'Node 1'),
+  G.insertNode(S.Eq)('n2', 'Node 2')
 )
 
 assert.deepStrictEqual(
-  fp.function.pipe(myGraph, graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1'), fp.option.map(graph.entries)),
-  fp.option.some({
+  pipe(myGraph, G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1'), O.map(G.entries)),
+  O.some({
     nodes: [
       ['n1', 'Node 1'],
       ['n2', 'Node 2'],
@@ -103,16 +101,13 @@ export declare const insertNode: <Id>(
 **Example**
 
 ```ts
-import * as graph from '@no-day/fp-ts-graph'
-import * as fp from 'fp-ts'
+import * as G from '@no-day/fp-ts-graph'
+import { pipe } from 'fp-ts/function'
+import * as N from 'fp-ts/number'
 
-const myGraph = fp.function.pipe(
-  graph.empty<number, unknown, string>(),
-  graph.insertNode(fp.eq.eqNumber)(54, 'n1'),
-  graph.insertNode(fp.eq.eqNumber)(3, 'n2')
-)
+const myGraph = pipe(G.empty<number, unknown, string>(), G.insertNode(N.Eq)(54, 'n1'), G.insertNode(N.Eq)(3, 'n2'))
 
-assert.deepStrictEqual(fp.function.pipe(myGraph, graph.entries), {
+assert.deepStrictEqual(pipe(myGraph, G.entries), {
   nodes: [
     [54, 'n1'],
     [3, 'n2'],
@@ -178,7 +173,7 @@ export declare const modifyAtEdge: <Id>(
   from: Id,
   to: Id,
   update: (e: Edge) => Edge
-) => <Node>(graph: Graph<Id, Edge, Node>) => option.Option<Graph<Id, Edge, Node>>
+) => <Node>(graph: Graph<Id, Edge, Node>) => O.Option<Graph<Id, Edge, Node>>
 ```
 
 Added in v0.2.0
@@ -195,7 +190,7 @@ export declare const modifyAtNode: <Id>(
 ) => <Node>(
   id: Id,
   update: (n: Node) => Node
-) => <Edge>(graph: Graph<Id, Edge, Node>) => option.Option<Graph<Id, Edge, Node>>
+) => <Edge>(graph: Graph<Id, Edge, Node>) => O.Option<Graph<Id, Edge, Node>>
 ```
 
 Added in v0.2.0
@@ -215,15 +210,15 @@ export declare const empty: <Id, Edge, Node>() => Graph<Id, Edge, Node>
 **Example**
 
 ```ts
-import Graph, * as graph from '@no-day/fp-ts-graph'
+import Graph, * as G from '@no-day/fp-ts-graph'
 
 type MyGraph = Graph<string, string, string>
 
-// `graph.empty()` will give you a `Graph<unknown, unknown, unknown>` and as you'll
+// `G.empty()` will give you a `Graph<unknown, unknown, unknown>` and as you'll
 // insert nodes and edges of a specific type later, it makes sense to already
 // provide the types.
 
-const myGraph: MyGraph = graph.empty()
+const myGraph: MyGraph = G.empty()
 ```
 
 Added in v0.1.0
@@ -356,27 +351,29 @@ Retrieves an edge from the graph.
 ```ts
 export declare const lookupEdge: <Id>(
   E: Eq<Id>
-) => (from: Id, to: Id) => <Edge>(graph: Graph<Id, Edge, unknown>) => option.Option<Edge>
+) => (from: Id, to: Id) => <Edge>(graph: Graph<Id, Edge, unknown>) => O.Option<Edge>
 ```
 
 **Example**
 
 ```ts
-import Graph, * as graph from '@no-day/fp-ts-graph'
-import * as fp from 'fp-ts'
+import Graph, * as G from '@no-day/fp-ts-graph'
+import { pipe } from 'fp-ts/function'
+import * as S from 'fp-ts/string'
+import * as O from 'fp-ts/Option'
 
 type MyGraph = Graph<string, string, string>
 
-const myGraph: MyGraph = fp.function.pipe(
-  graph.empty<string, string, string>(),
-  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-  graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-  fp.option.of,
-  fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-  fp.option.getOrElse(() => graph.empty<string, string, string>())
+const myGraph: MyGraph = pipe(
+  G.empty<string, string, string>(),
+  G.insertNode(S.Eq)('n1', 'Node 1'),
+  G.insertNode(S.Eq)('n2', 'Node 2'),
+  O.of,
+  O.chain(G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1')),
+  O.getOrElse(() => G.empty<string, string, string>())
 )
 
-assert.deepStrictEqual(fp.function.pipe(myGraph, graph.lookupEdge(fp.string.Eq)('n1', 'n2')), fp.option.some('Edge 1'))
+assert.deepStrictEqual(pipe(myGraph, G.lookupEdge(S.Eq)('n1', 'n2')), O.some('Edge 1'))
 ```
 
 Added in v0.2.0
@@ -390,24 +387,26 @@ Retrieves a node from the graph.
 ```ts
 export declare const lookupNode: <Id>(
   E: Eq<Id>
-) => (id: Id) => <Node>(graph: Graph<Id, unknown, Node>) => option.Option<Node>
+) => (id: Id) => <Node>(graph: Graph<Id, unknown, Node>) => O.Option<Node>
 ```
 
 **Example**
 
 ```ts
-import Graph, * as graph from '@no-day/fp-ts-graph'
-import * as fp from 'fp-ts'
+import Graph, * as G from '@no-day/fp-ts-graph'
+import { pipe } from 'fp-ts/function'
+import * as S from 'fp-ts/string'
+import * as O from 'fp-ts/Option'
 
 type MyGraph = Graph<string, string, string>
 
-const myGraph: MyGraph = fp.function.pipe(
-  graph.empty<string, string, string>(),
-  graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-  graph.insertNode(fp.string.Eq)('n2', 'Node 2')
+const myGraph: MyGraph = pipe(
+  G.empty<string, string, string>(),
+  G.insertNode(S.Eq)('n1', 'Node 1'),
+  G.insertNode(S.Eq)('n2', 'Node 2')
 )
 
-assert.deepStrictEqual(fp.function.pipe(myGraph, graph.lookupNode(fp.string.Eq)('n2')), fp.option.some('Node 2'))
+assert.deepStrictEqual(pipe(myGraph, G.lookupNode(S.Eq)('n2')), O.some('Node 2'))
 ```
 
 Added in v0.2.0
