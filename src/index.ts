@@ -1,12 +1,16 @@
 /** @since 0.1.0 */
 
 import { pipe } from 'fp-ts/function';
-import * as M from 'fp-ts/Map';
 import * as A from 'fp-ts/Array';
+import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
-import { Option } from 'fp-ts/Option';
+import * as R from 'fp-ts/Record';
+import * as RA from 'fp-ts/ReadonlyArray';
 import * as S from 'fp-ts/Set';
-import { Eq, struct } from 'fp-ts/Eq';
+import * as str from 'fp-ts/string';
+import * as Cod from 'io-ts/Codec';
+import * as Dec from 'io-ts/Decoder';
+import * as Enc from 'io-ts/Encoder';
 
 // -----------------------------------------------------------------------------
 // model
@@ -25,8 +29,8 @@ import { Eq, struct } from 'fp-ts/Eq';
  */
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
-  readonly nodes: Map<Id, NodeContext<Id, Node>>;
-  readonly edges: Map<Direction<Id>, Edge>;
+  readonly nodes: Record<string, NodeContext<Node>>;
+  readonly edges: Record<string, Edge>;
 }
 
 export {
@@ -45,10 +49,10 @@ export {
  */
 export type Direction<T> = { from: T; to: T };
 
-type NodeContext<Id, Node> = {
+type NodeContext<Node> = {
   data: Node;
-  outgoing: Set<Id>;
-  incoming: Set<Id>;
+  outgoing: Set<string>;
+  incoming: Set<string>;
 };
 
 // -----------------------------------------------------------------------------
@@ -73,8 +77,8 @@ type NodeContext<Id, Node> = {
  */
 export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
-    nodes: new Map(),
-    edges: new Map(),
+    nodes: {},
+    edges: {},
   });
 
 // -----------------------------------------------------------------------------
@@ -90,30 +94,31 @@ export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
  * @example
  *   import * as G from '@no-day/fp-ts-graph';
  *   import { pipe } from 'fp-ts/function';
- *   import * as N from 'fp-ts/number';
+ *   import * as C from 'io-ts/Codec';
  *
  *   const myGraph = pipe(
- *     G.empty<number, unknown, string>(),
- *     G.insertNode(N.Eq)(54, 'n1'),
- *     G.insertNode(N.Eq)(3, 'n2')
+ *     G.empty<string, unknown, string>(),
+ *     G.insertNode(C.string)('54', 'n1'),
+ *     G.insertNode(C.string)('3', 'n2')
  *   );
  *
- *   assert.deepStrictEqual(pipe(myGraph, G.entries), {
- *     nodes: [
- *       [54, 'n1'],
- *       [3, 'n2'],
- *     ],
- *     edges: [],
- *   });
+ *   assert.deepStrictEqual(
+ *     pipe(myGraph, G.nodeEntries(C.string), (ent) => new Set(ent)),
+ *     new Set([
+ *       ['54', 'n1'],
+ *       ['3', 'n2'],
+ *     ])
+ *   );
+ *   assert.deepStrictEqual(pipe(myGraph, G.edgeEntries(C.string)), []);
  */
 export const insertNode =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   <Node>(id: Id, data: Node) =>
   <Edge>(graph: Graph<Id, Edge, Node>): Graph<Id, Edge, Node> =>
     unsafeMkGraph({
       nodes: pipe(
         graph.nodes,
-        M.modifyAt(E)(id, ({ incoming, outgoing }) => ({
+        R.modifyAt(E.encode(id), ({ incoming, outgoing }) => ({
           incoming,
           outgoing,
           data,
@@ -121,10 +126,10 @@ export const insertNode =
         O.getOrElse(() =>
           pipe(
             graph.nodes,
-            M.upsertAt(E)(id, {
+            R.upsertAt(E.encode(id), {
               data,
-              incoming: S.empty as Set<Id>,
-              outgoing: S.empty as Set<Id>,
+              incoming: S.empty as Set<string>,
+              outgoing: S.empty as Set<string>,
             })
           )
         )
@@ -142,21 +147,21 @@ export const insertNode =
  *   import Graph, * as G from '@no-day/fp-ts-graph';
  *   import { pipe } from 'fp-ts/function';
  *   import * as O from 'fp-ts/Option';
- *   import * as S from 'fp-ts/string';
+ *   import * as C from 'io-ts/Codec';
  *
  *   type MyGraph = Graph<string, string, string>;
  *
  *   const myGraph: MyGraph = pipe(
  *     G.empty<string, string, string>(),
- *     G.insertNode(S.Eq)('n1', 'Node 1'),
- *     G.insertNode(S.Eq)('n2', 'Node 2')
+ *     G.insertNode(C.string)('n1', 'Node 1'),
+ *     G.insertNode(C.string)('n2', 'Node 2')
  *   );
  *
  *   assert.deepStrictEqual(
  *     pipe(
  *       myGraph,
- *       G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1'),
- *       O.map(G.entries)
+ *       G.insertEdge(C.string)('n1', 'n2', 'Edge 1'),
+ *       O.map(G.entries(C.string))
  *     ),
  *     O.some({
  *       nodes: [
@@ -168,9 +173,9 @@ export const insertNode =
  *   );
  */
 export const insertEdge =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, data: Edge) =>
-  <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+  <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.nodes,
       modifyEdgeInNodes(E)(from, to),
@@ -193,7 +198,7 @@ export const mapEdge =
   <Id, Node>(graph: Graph<Id, Edge1, Node>): Graph<Id, Edge2, Node> =>
     unsafeMkGraph({
       nodes: graph.nodes,
-      edges: pipe(graph.edges, M.map(fn)),
+      edges: pipe(graph.edges, R.map(fn)),
     });
 
 /**
@@ -208,7 +213,7 @@ export const mapNode =
     unsafeMkGraph({
       nodes: pipe(
         graph.nodes,
-        M.map(({ incoming, outgoing, data }) => ({
+        R.map(({ incoming, outgoing, data }) => ({
           incoming,
           outgoing,
           data: fn(data),
@@ -232,12 +237,12 @@ export const map = mapNode;
  * @category Combinators
  */
 export const modifyAtEdge =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, update: (e: Edge) => Edge) =>
-  <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+  <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.edges,
-      M.modifyAt(getEqEdgeId(E))({ from, to }, update),
+      R.modifyAt(getEncodeEdgeId(E).encode({ from, to }), update),
       O.map((edges) => unsafeMkGraph({ nodes: graph.nodes, edges }))
     );
 
@@ -248,12 +253,12 @@ export const modifyAtEdge =
  * @category Combinators
  */
 export const modifyAtNode =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   <Node>(id: Id, update: (n: Node) => Node) =>
-  <Edge>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
+  <Edge>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.nodes,
-      M.modifyAt(E)(id, ({ incoming, outgoing, data }) => ({
+      R.modifyAt(E.encode(id), ({ incoming, outgoing, data }) => ({
         incoming,
         outgoing,
         data: update(data),
@@ -273,30 +278,30 @@ export const modifyAtNode =
  * @example
  *   import Graph, * as G from '@no-day/fp-ts-graph';
  *   import { pipe } from 'fp-ts/function';
- *   import * as S from 'fp-ts/string';
  *   import * as O from 'fp-ts/Option';
+ *   import * as C from 'io-ts/Codec';
  *
  *   type MyGraph = Graph<string, string, string>;
  *
  *   const myGraph: MyGraph = pipe(
  *     G.empty<string, string, string>(),
- *     G.insertNode(S.Eq)('n1', 'Node 1'),
- *     G.insertNode(S.Eq)('n2', 'Node 2'),
+ *     G.insertNode(C.string)('n1', 'Node 1'),
+ *     G.insertNode(C.string)('n2', 'Node 2'),
  *     O.of,
- *     O.chain(G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1')),
+ *     O.chain(G.insertEdge(C.string)('n1', 'n2', 'Edge 1')),
  *     O.getOrElse(() => G.empty<string, string, string>())
  *   );
  *
  *   assert.deepStrictEqual(
- *     pipe(myGraph, G.lookupEdge(S.Eq)('n1', 'n2')),
+ *     pipe(myGraph, G.lookupEdge(C.string)('n1', 'n2')),
  *     O.some('Edge 1')
  *   );
  */
 export const lookupEdge =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id, to: Id) =>
-  <Edge>(graph: Graph<Id, Edge, unknown>): Option<Edge> =>
-    pipe(graph.edges, M.lookup(getEqEdgeId(E))({ from, to }));
+  <Edge>(graph: Graph<Id, Edge, unknown>): O.Option<Edge> =>
+    pipe(graph.edges, R.lookup(getEncodeEdgeId(E).encode({ from, to })));
 
 /**
  * Retrieves a node from the graph.
@@ -306,29 +311,29 @@ export const lookupEdge =
  * @example
  *   import Graph, * as G from '@no-day/fp-ts-graph';
  *   import { pipe } from 'fp-ts/function';
- *   import * as S from 'fp-ts/string';
  *   import * as O from 'fp-ts/Option';
+ *   import * as C from 'io-ts/Codec';
  *
  *   type MyGraph = Graph<string, string, string>;
  *
  *   const myGraph: MyGraph = pipe(
  *     G.empty<string, string, string>(),
- *     G.insertNode(S.Eq)('n1', 'Node 1'),
- *     G.insertNode(S.Eq)('n2', 'Node 2')
+ *     G.insertNode(C.string)('n1', 'Node 1'),
+ *     G.insertNode(C.string)('n2', 'Node 2')
  *   );
  *
  *   assert.deepStrictEqual(
- *     pipe(myGraph, G.lookupNode(S.Eq)('n2')),
+ *     pipe(myGraph, G.lookupNode(C.string)('n2')),
  *     O.some('Node 2')
  *   );
  */
 export const lookupNode =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   (id: Id) =>
-  <Node>(graph: Graph<Id, unknown, Node>): Option<Node> =>
+  <Node>(graph: Graph<Id, unknown, Node>): O.Option<Node> =>
     pipe(
       graph.nodes,
-      M.lookup(E)(id),
+      R.lookup(E.encode(id)),
       O.map((node) => node.data)
     );
 
@@ -342,14 +347,14 @@ export const lookupNode =
  * @since 0.1.0
  * @category Destructors
  */
-export const nodeEntries = <Id, Edge, Node>(
-  graph: Graph<Id, Edge, Node>
-): [Id, Node][] =>
-  pipe(
-    graph.nodes,
-    M.map((_) => _.data),
-    mapEntries
-  );
+export const nodeEntries =
+  <Id>(D: Dec.Decoder<string, Id>) =>
+  <Edge, Node>(graph: Graph<Id, Edge, Node>): [Id, Node][] =>
+    pipe(
+      graph.nodes,
+      R.map((_) => _.data),
+      mapEntries<Id>(D)
+    );
 
 /**
  * Get edges as "edge id"-"value" pairs. As currently multi-edges are not
@@ -358,20 +363,23 @@ export const nodeEntries = <Id, Edge, Node>(
  * @since 0.1.0
  * @category Destructors
  */
-export const edgeEntries = <Id, Edge, Node>(
-  graph: Graph<Id, Edge, Node>
-): [Direction<Id>, Edge][] => pipe(graph.edges, mapEntries);
+export const edgeEntries =
+  <Id>(D: Dec.Decoder<string, Id>) =>
+  <Edge, Node>(graph: Graph<Id, Edge, Node>): [Direction<Id>, Edge][] =>
+    pipe(graph.edges, mapEntries(getDecodeEdgeId(D)));
 
 /**
  * @since 0.1.0
  * @category Destructors
  */
-export const entries = <Id, Edge, Node>(
-  graph: Graph<Id, Edge, Node>
-): { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] } => ({
-  nodes: nodeEntries(graph),
-  edges: edgeEntries(graph),
-});
+export const entries =
+  <Id>(C: Cod.Codec<string, string, Id>) =>
+  <Edge, Node>(
+    graph: Graph<Id, Edge, Node>
+  ): { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] } => ({
+    nodes: nodeEntries(C)(graph),
+    edges: edgeEntries(C)(graph),
+  });
 
 // -----------------------------------------------------------------------------
 // debug
@@ -391,16 +399,17 @@ export const entries = <Id, Edge, Node>(
  * @category Debug
  */
 export const toDotFile =
-  <Id>(printId: (id: Id) => string) =>
+  <Id>(D: Dec.Decoder<string, Id>) =>
+  (printId: (id: Id) => string) =>
   (graph: Graph<Id, string, string>): string =>
     pipe(
       [
         ...pipe(
-          nodeEntries(graph),
+          nodeEntries(D)(graph),
           A.map(([id, label]) => `"${printId(id)}" [label="${label}"]`)
         ),
         ...pipe(
-          edgeEntries(graph),
+          edgeEntries(D)(graph),
           A.map(
             ([{ from, to }, label]) =>
               `"${printId(from)}" -> "${printId(to)}" [label="${label}"]`
@@ -414,13 +423,52 @@ export const toDotFile =
 // -----------------------------------------------------------------------------
 // instances
 // -----------------------------------------------------------------------------
-
 /**
- * @since 0.1.0
+ * @since 0.3.0
  * @category Instances
  */
-export const getEqEdgeId = <Id>(E: Eq<Id>): Eq<Direction<Id>> =>
-  struct({ from: E, to: E });
+export const edgeStringSeparator = '\u2688\u2689\u2688'; // ⚈⚉⚈
+
+/**
+ * @since 0.3.0
+ * @category Instances
+ */
+export const getDecodeEdgeId = <Id>(
+  D: Dec.Decoder<string, Id>
+): Dec.Decoder<string, Direction<Id>> => ({
+  decode: (i: string) =>
+    pipe(
+      i.split(edgeStringSeparator),
+      E.fromPredicate(
+        (splitArr) => splitArr.length === 2,
+        () => Dec.error(i, 'Invalid number of parts in encoded edge Id')
+      ),
+      E.bindTo('split'),
+      E.bind('from', ({ split }) => D.decode(split[0])),
+      E.bind('to', ({ split }) => D.decode(split[1])),
+      E.map(({ from, to }) => ({ from, to }))
+    ),
+});
+
+/**
+ * @since 0.3.0
+ * @category Instances
+ */
+export const getEncodeEdgeId = <Id>(
+  E: Enc.Encoder<string, Id>
+): Enc.Encoder<string, Direction<Id>> => ({
+  encode: (a: Direction<Id>) =>
+    `${E.encode(a.from)}${edgeStringSeparator}${E.encode(a.to)}`,
+});
+
+/**
+ * @since 0.3.0
+ * @category Instances
+ */
+export const getCodecEdgeId = <Id>(
+  C: Cod.Codec<string, string, Id>
+): Cod.Codec<string, string, Direction<Id>> =>
+  Cod.make(getDecodeEdgeId(C), getEncodeEdgeId(C));
 
 // -----------------------------------------------------------------------------
 // internal
@@ -430,48 +478,58 @@ const unsafeMkGraph = <Id, Edge, Node>(
   graphData: Omit<Graph<Id, Edge, Node>, '_brand'>
 ): Graph<Id, Edge, Node> => graphData as Graph<Id, Edge, Node>;
 
-const mapEntries = <K, V>(map_: Map<K, V>): [K, V][] =>
-  pipe(
-    map_,
-    (_) => _.entries(),
-    Array.from,
-    (_) => _ as [K, V][]
-  );
+const mapEntries =
+  <Id>(decoder: Dec.Decoder<string, Id>) =>
+  <V>(map_: Record<string, V>): [Id, V][] =>
+    pipe(
+      map_,
+      R.toArray,
+      RA.fromArray,
+      E.traverseArray(([encodedKey, value]) =>
+        pipe(
+          encodedKey,
+          decoder.decode,
+          E.map((key) => <[Id, V]>[key, value])
+        )
+      ),
+      E.map(RA.toArray),
+      E.getOrElse(() => <[Id, V][]>[])
+    );
 
 const insertIncoming =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id) =>
-  <Node>(nodeContext: NodeContext<Id, Node>): NodeContext<Id, Node> => ({
+  <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
     outgoing: nodeContext.outgoing,
-    incoming: pipe(nodeContext.incoming, S.insert(E)(from)),
+    incoming: pipe(nodeContext.incoming, S.insert(str.Eq)(E.encode(from))),
   });
 
 const insertOutgoing =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id) =>
-  <Node>(nodeContext: NodeContext<Id, Node>): NodeContext<Id, Node> => ({
+  <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
-    outgoing: pipe(nodeContext.outgoing, S.insert(E)(from)),
+    outgoing: pipe(nodeContext.outgoing, S.insert(str.Eq)(E.encode(from))),
     incoming: nodeContext.outgoing,
   });
 
 const modifyEdgeInNodes =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id, to: Id) =>
   <Node>(
     nodes: Graph<Id, unknown, Node>['nodes']
-  ): Option<Graph<Id, unknown, Node>['nodes']> =>
+  ): O.Option<Graph<Id, unknown, Node>['nodes']> =>
     pipe(
       nodes,
-      M.modifyAt(E)(from, insertOutgoing(E)(to)),
-      O.chain(M.modifyAt(E)(to, insertIncoming(E)(from)))
+      R.modifyAt(E.encode(from), insertOutgoing(E)(to)),
+      O.chain(R.modifyAt(E.encode(to), insertIncoming(E)(from)))
     );
 
 const insertEdgeInEdges =
-  <Id>(E: Eq<Id>) =>
+  <Id>(E: Enc.Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, data: Edge) =>
   (
     edges: Graph<Id, Edge, unknown>['edges']
   ): Graph<Id, Edge, unknown>['edges'] =>
-    pipe(edges, M.upsertAt(getEqEdgeId(E))({ from, to }, data));
+    pipe(edges, R.upsertAt(getEncodeEdgeId(E).encode({ from, to }), data));

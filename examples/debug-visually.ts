@@ -4,6 +4,7 @@ import { flow, pipe } from 'fp-ts/function';
 
 // We import our graph from the previous section
 import { myGraph } from './build-graph';
+import { MyIdCodec } from './types';
 
 pipe(
   myGraph,
@@ -20,7 +21,7 @@ pipe(
       ),
 
       // For debugging, we generate a simple dot file
-      G.toDotFile((_) => _.toString())
+      G.toDotFile(MyIdCodec)((_) => _.toString())
     )
   ),
 
