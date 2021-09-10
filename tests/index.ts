@@ -1,15 +1,22 @@
 import * as graph from '../src';
 import { deepStrictEqual } from 'assert';
 import * as fp from 'fp-ts';
+import * as Codec from 'io-ts/Codec';
 
 describe('index', () => {
   describe('Constructors', () => {
     describe('empty', () => {
       it('should return an empty graph', () => {
-        deepStrictEqual(fp.function.pipe(graph.empty(), graph.entries), {
-          nodes: [],
-          edges: [],
-        });
+        deepStrictEqual(
+          fp.function.pipe(
+            graph.empty<string, string, string>(),
+            graph.entries(Codec.string)
+          ),
+          {
+            nodes: [],
+            edges: [],
+          }
+        );
       });
     });
   });
@@ -20,9 +27,9 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.entries
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
+            graph.entries(Codec.string)
           ),
           {
             nodes: [
@@ -38,9 +45,9 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.entries
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.entries(Codec.string)
           ),
           {
             nodes: [['n1', 'Node 1']],
@@ -55,20 +62,20 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
             fp.option.of,
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+              graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.modifyAtEdge(fp.string.Eq)(
+              graph.modifyAtEdge(Codec.string)(
                 'n1',
                 'n2',
                 (e) => `${e} updated`
               )
             ),
-            fp.option.map(graph.edgeEntries)
+            fp.option.map(graph.edgeEntries(Codec.string))
           ),
           fp.option.some([[{ from: 'n1', to: 'n2' }, 'Edge 1 updated']])
         );
@@ -78,20 +85,20 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
             fp.option.of,
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+              graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.modifyAtEdge(fp.string.Eq)(
+              graph.modifyAtEdge(Codec.string)(
                 'n2',
                 'n1',
                 (e) => `${e} updated`
               )
             ),
-            fp.option.map(graph.edgeEntries)
+            fp.option.map(graph.edgeEntries(Codec.string))
           ),
           fp.option.none
         );
@@ -103,10 +110,10 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.modifyAtNode(fp.string.Eq)('n2', (n) => `${n} updated`),
-            fp.option.map(graph.nodeEntries)
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
+            graph.modifyAtNode(Codec.string)('n2', (n) => `${n} updated`),
+            fp.option.map(graph.nodeEntries(Codec.string))
           ),
           fp.option.some([
             ['n1', 'Node 1'],
@@ -119,10 +126,10 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.modifyAtNode(fp.string.Eq)('n3', (n) => `${n} updated`),
-            fp.option.map(graph.nodeEntries)
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
+            graph.modifyAtNode(Codec.string)('n3', (n) => `${n} updated`),
+            fp.option.map(graph.nodeEntries(Codec.string))
           ),
           fp.option.none
         );
@@ -135,10 +142,10 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-          graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1'),
-          fp.option.map(graph.entries)
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1'),
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [
@@ -154,12 +161,12 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n1', 'Edge 2')),
-          fp.option.map(graph.entries)
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n2', 'n1', 'Edge 2')),
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [
@@ -178,9 +185,9 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertEdge(fp.string.Eq)('n1', 'n1', 'Edge 1'),
-          fp.option.map(graph.entries)
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertEdge(Codec.string)('n1', 'n1', 'Edge 1'),
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [['n1', 'Node 1']],
@@ -193,9 +200,9 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1'),
-          fp.option.map(graph.entries)
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1'),
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.none
       );
@@ -207,14 +214,14 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, number, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-          graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 1)),
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 2)),
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 1)),
+          fp.option.chain(graph.insertEdge(Codec.string)('n2', 'n3', 2)),
           fp.option.map(graph.mapEdge((n) => `Edge ${n}`)),
-          fp.option.map(graph.entries)
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [
@@ -236,12 +243,12 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, number>(),
-          graph.insertNode(fp.string.Eq)('n1', 1),
-          graph.insertNode(fp.string.Eq)('n2', 2),
+          graph.insertNode(Codec.string)('n1', 1),
+          graph.insertNode(Codec.string)('n2', 2),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
           fp.option.map(graph.mapNode((n) => `Node ${n}`)),
-          fp.option.map(graph.entries)
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [
@@ -259,11 +266,11 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-          fp.option.map(graph.nodeEntries)
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
+          fp.option.map(graph.nodeEntries(Codec.string))
         ),
         fp.option.some([
           ['n1', 'Node 1'],
@@ -278,14 +285,14 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-          graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n2', 'n3', 'Edge 2')),
           fp.option.map(graph.mapNode((n) => `Node ${n}`)),
-          fp.option.map(graph.edgeEntries)
+          fp.option.map(graph.edgeEntries(Codec.string))
         ),
         fp.option.some([
           [{ from: 'n1', to: 'n2' }, 'Edge 1'],
@@ -300,13 +307,13 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-          graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
-          fp.option.map(graph.entries)
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n2', 'n3', 'Edge 2')),
+          fp.option.map(graph.entries(Codec.string))
         ),
         fp.option.some({
           nodes: [
@@ -328,13 +335,13 @@ describe('index', () => {
       deepStrictEqual(
         fp.function.pipe(
           graph.empty<string, string, string>(),
-          graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-          graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-          graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n3', 'Node 3'),
           fp.option.of,
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')),
-          fp.option.chain(graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')),
-          fp.option.map(graph.toDotFile(fp.function.identity))
+          fp.option.chain(graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n2', 'n3', 'Edge 2')),
+          fp.option.map(graph.toDotFile(Codec.string)(fp.function.identity))
         ),
         fp.option.some(`digraph {
 "n1" [label="Node 1"]
@@ -353,17 +360,17 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
+            graph.insertNode(Codec.string)('n3', 'Node 3'),
             fp.option.of,
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+              graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
+              graph.insertEdge(Codec.string)('n2', 'n3', 'Edge 2')
             ),
-            fp.option.chain(graph.lookupEdge(fp.string.Eq)('n1', 'n2'))
+            fp.option.chain(graph.lookupEdge(Codec.string)('n1', 'n2'))
           ),
           fp.option.some('Edge 1')
         );
@@ -373,17 +380,17 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.insertNode(fp.string.Eq)('n2', 'Node 2'),
-            graph.insertNode(fp.string.Eq)('n3', 'Node 3'),
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.insertNode(Codec.string)('n2', 'Node 2'),
+            graph.insertNode(Codec.string)('n3', 'Node 3'),
             fp.option.of,
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n1', 'n2', 'Edge 1')
+              graph.insertEdge(Codec.string)('n1', 'n2', 'Edge 1')
             ),
             fp.option.chain(
-              graph.insertEdge(fp.string.Eq)('n2', 'n3', 'Edge 2')
+              graph.insertEdge(Codec.string)('n2', 'n3', 'Edge 2')
             ),
-            fp.option.chain(graph.lookupEdge(fp.string.Eq)('n3', 'n2'))
+            fp.option.chain(graph.lookupEdge(Codec.string)('n3', 'n2'))
           ),
           fp.option.none
         );
@@ -395,8 +402,8 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.lookupNode(fp.string.Eq)('n1')
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.lookupNode(Codec.string)('n1')
           ),
           fp.option.some('Node 1')
         );
@@ -406,8 +413,8 @@ describe('index', () => {
         deepStrictEqual(
           fp.function.pipe(
             graph.empty<string, string, string>(),
-            graph.insertNode(fp.string.Eq)('n1', 'Node 1'),
-            graph.lookupNode(fp.string.Eq)('n2')
+            graph.insertNode(Codec.string)('n1', 'Node 1'),
+            graph.lookupNode(Codec.string)('n2')
           ),
           fp.option.none
         );
