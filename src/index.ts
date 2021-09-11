@@ -5,7 +5,6 @@ import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
 import * as R from 'fp-ts/Record';
-import * as RA from 'fp-ts/ReadonlyArray';
 import * as S from 'fp-ts/Set';
 import * as str from 'fp-ts/string';
 import * as Cod from 'io-ts/Codec';
@@ -23,6 +22,8 @@ import * as Enc from 'io-ts/Encoder';
  * - Id means `Id` of a node,
  * - `Node` is the data/label attached to a node
  * - `Edge` is the data/label attached to a an edge
+ * - `nodes` key is encoded `Id` to `string` using 'io-ts/Encoder'
+ * - `edges` outer key is encoded from node `Id`, inner `Record` key is encoded to node `Id`
  *
  * @since 0.1.0
  * @category Model
@@ -30,7 +31,7 @@ import * as Enc from 'io-ts/Encoder';
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
   readonly nodes: Record<string, NodeContext<Node>>;
-  readonly edges: Record<string, Edge>;
+  readonly edges: Record<string, Record<string, Edge>>;
 }
 
 export {
@@ -198,7 +199,7 @@ export const mapEdge =
   <Id, Node>(graph: Graph<Id, Edge1, Node>): Graph<Id, Edge2, Node> =>
     unsafeMkGraph({
       nodes: graph.nodes,
-      edges: pipe(graph.edges, R.map(fn)),
+      edges: pipe(graph.edges, R.map(R.map(fn))),
     });
 
 /**
@@ -242,7 +243,14 @@ export const modifyAtEdge =
   <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.edges,
-      R.modifyAt(getEncodeEdgeId(E).encode({ from, to }), update),
+      R.lookup(E.encode(from)),
+      O.chain(R.modifyAt(E.encode(to), update)),
+      O.chain((updatedTo) =>
+        pipe(
+          graph.edges,
+          R.modifyAt(E.encode(from), () => updatedTo)
+        )
+      ),
       O.map((edges) => unsafeMkGraph({ nodes: graph.nodes, edges }))
     );
 
@@ -301,7 +309,11 @@ export const lookupEdge =
   <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id, to: Id) =>
   <Edge>(graph: Graph<Id, Edge, unknown>): O.Option<Edge> =>
-    pipe(graph.edges, R.lookup(getEncodeEdgeId(E).encode({ from, to })));
+    pipe(
+      graph.edges,
+      R.lookup(E.encode(from)),
+      O.chain(R.lookup(E.encode(to)))
+    );
 
 /**
  * Retrieves a node from the graph.
@@ -366,7 +378,24 @@ export const nodeEntries =
 export const edgeEntries =
   <Id>(D: Dec.Decoder<string, Id>) =>
   <Edge, Node>(graph: Graph<Id, Edge, Node>): [Direction<Id>, Edge][] =>
-    pipe(graph.edges, mapEntries(getDecodeEdgeId(D)));
+    pipe(
+      graph.edges,
+      R.toArray,
+      A.chain(([encodedFrom, toRecord]) =>
+        pipe(
+          encodedFrom,
+          D.decode,
+          E.map((from) =>
+            pipe(
+              toRecord,
+              mapEntries(D),
+              A.map(([to, edge]) => <[Direction<Id>, Edge]>[{ from, to }, edge])
+            )
+          ),
+          E.getOrElse(() => <[Direction<Id>, Edge][]>[])
+        )
+      )
+    );
 
 /**
  * @since 0.1.0
@@ -421,56 +450,6 @@ export const toDotFile =
     );
 
 // -----------------------------------------------------------------------------
-// instances
-// -----------------------------------------------------------------------------
-/**
- * @since 0.3.0
- * @category Instances
- */
-export const edgeStringSeparator = '\u2688\u2689\u2688'; // ⚈⚉⚈
-
-/**
- * @since 0.3.0
- * @category Instances
- */
-export const getDecodeEdgeId = <Id>(
-  D: Dec.Decoder<string, Id>
-): Dec.Decoder<string, Direction<Id>> => ({
-  decode: (i: string) =>
-    pipe(
-      i.split(edgeStringSeparator),
-      E.fromPredicate(
-        (splitArr) => splitArr.length === 2,
-        () => Dec.error(i, 'Invalid number of parts in encoded edge Id')
-      ),
-      E.bindTo('split'),
-      E.bind('from', ({ split }) => D.decode(split[0])),
-      E.bind('to', ({ split }) => D.decode(split[1])),
-      E.map(({ from, to }) => ({ from, to }))
-    ),
-});
-
-/**
- * @since 0.3.0
- * @category Instances
- */
-export const getEncodeEdgeId = <Id>(
-  E: Enc.Encoder<string, Id>
-): Enc.Encoder<string, Direction<Id>> => ({
-  encode: (a: Direction<Id>) =>
-    `${E.encode(a.from)}${edgeStringSeparator}${E.encode(a.to)}`,
-});
-
-/**
- * @since 0.3.0
- * @category Instances
- */
-export const getCodecEdgeId = <Id>(
-  C: Cod.Codec<string, string, Id>
-): Cod.Codec<string, string, Direction<Id>> =>
-  Cod.make(getDecodeEdgeId(C), getEncodeEdgeId(C));
-
-// -----------------------------------------------------------------------------
 // internal
 // -----------------------------------------------------------------------------
 
@@ -484,15 +463,13 @@ const mapEntries =
     pipe(
       map_,
       R.toArray,
-      RA.fromArray,
-      E.traverseArray(([encodedKey, value]) =>
+      A.traverse(E.Applicative)(([encodedKey, value]) =>
         pipe(
           encodedKey,
           decoder.decode,
           E.map((key) => <[Id, V]>[key, value])
         )
       ),
-      E.map(RA.toArray),
       E.getOrElse(() => <[Id, V][]>[])
     );
 
@@ -532,4 +509,10 @@ const insertEdgeInEdges =
   (
     edges: Graph<Id, Edge, unknown>['edges']
   ): Graph<Id, Edge, unknown>['edges'] =>
-    pipe(edges, R.upsertAt(getEncodeEdgeId(E).encode({ from, to }), data));
+    pipe(
+      edges,
+      R.lookup(E.encode(from)),
+      O.getOrElse(() => <Record<string, Edge>>{}),
+      R.upsertAt(E.encode(to), data),
+      (toRecord) => R.upsertAt(E.encode(from), toRecord)(edges)
+    );
