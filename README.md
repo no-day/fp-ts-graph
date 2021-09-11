@@ -63,6 +63,20 @@ export type MyNode = { firstName: string; lastName: string; age: number };
 
 export type MyEdge = { items: number[] };
 
+// Define codec for encoding and decoding Id to string
+
+export const MyIdCodec: Codec<string, string, MyId> = {
+  encode: (a: MyId) => a.toString(),
+  decode: (i: string) =>
+    pipe(
+      Number(i),
+      E.fromPredicate(
+        (parsed: number) => !isNaN(parsed),
+        () => Dec.error(i, `${i} is not a number`)
+      )
+    ),
+};
+
 // With this we can define a customized Graph type
 
 export type MyGraph = Graph<MyId, MyEdge, MyNode>;
@@ -80,13 +94,13 @@ import * as O from 'fp-ts/Option';
 import { Option } from 'fp-ts/Option';
 
 // We import our types from the previous section
-import { MyEdge, MyId, MyNode, MyGraph } from './types';
+import { MyEdge, MyId, MyNode, MyGraph, MyIdCodec } from './types';
 
 // To save some writing, we define partially applied versions of the builder functions
 
 const empty = G.empty<MyId, MyEdge, MyNode>();
-const insertNode = G.insertNode(N.Eq);
-const insertEdge = G.insertEdge(N.Eq);
+const insertNode = G.insertNode(MyIdCodec);
+const insertEdge = G.insertEdge(MyIdCodec);
 
 // Then, let's fill the graph with Data.
 
@@ -138,6 +152,10 @@ import { flow, pipe } from 'fp-ts/function';
 // We import our graph from the previous section
 import { myGraph } from './build-graph';
 
+// We import Id codec
+import { MyIdCodec } from './types';
+
+
 pipe(
   myGraph,
 
@@ -153,7 +171,7 @@ pipe(
       ),
 
       // For debugging, we generate a simple dot file
-      G.toDotFile((_) => _.toString())
+      G.toDotFile(MyIdCodec)((_) => _.toString())
     )
   ),
 
