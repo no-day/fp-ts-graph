@@ -51,121 +51,46 @@ npm install fp-ts @no-day/fp-ts-graph
 ### Define Types
 
 ```ts
-// examples/types.ts
+import * as G from 'Graph';
+import { Graph } from 'Graph';
+import { Either } from 'fp-ts/Either';
 
-import { Graph } from '@no-day/fp-ts-graph';
+const config = {
+  directed: true,
+  multiEdge: false,
+  cyclic: false,
+};
 
-// First, let's define some custom Id, Edge and Node type for our Graph
+type Id = number;
 
-export type MyId = number;
+type Node = { firstName: string; lastName: string; age: number };
 
-export type MyNode = { firstName: string; lastName: string; age: number };
+type Edge = { items: number[] };
 
-export type MyEdge = { items: number[] };
+type Config = typeof config;
 
-// With this we can define a customized Graph type
+export type MyGraph = Graph<Config, Id, Edge, Node>;
 
-export type MyGraph = Graph<MyId, MyEdge, MyNode>;
-```
-
-### Build Graph
-
-```ts
-// examples/build-graph.ts
-
-import Graph, * as G from '../src';
-import * as N from 'fp-ts/number';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-import { Option } from 'fp-ts/Option';
-
-// We import our types from the previous section
-import { MyEdge, MyId, MyNode, MyGraph } from './types';
-
-// To save some writing, we define partially applied versions of the builder functions
-
-const empty = G.empty<MyId, MyEdge, MyNode>();
-const insertNode = G.insertNode(N.Eq);
-const insertEdge = G.insertEdge(N.Eq);
-
-// Then, let's fill the graph with Data.
-
-export const myGraph: Option<MyGraph> = pipe(
-  // We start out with and empty graph.
-  empty,
-
-  // And add some nodes to it.
-  insertNode(1001, {
-    firstName: 'Tonicha',
-    lastName: 'Crowther',
-    age: 45,
-  }),
-  insertNode(1002, {
-    firstName: 'Samual',
-    lastName: 'Sierra',
-    age: 29,
-  }),
-  insertNode(1003, {
-    firstName: 'Khushi',
-    lastName: 'Walter',
-    age: 40,
-  }),
-  insertNode(1004, {
-    firstName: 'Rian',
-    lastName: 'Ruiz',
-    age: 56,
-  }),
-
-  // Then we connect them with edges, which can have data, too
-
-  O.of,
-  O.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  O.chain(insertEdge(1002, 1003, { items: [4] })),
-  O.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  O.chain(insertEdge(1003, 1004, { items: [2, 3] }))
-);
+export const myGraph: Either<G.Error, MyGraph> = G.fromEntries(config)({
+  nodes: [
+    [1001, { firstName: 'Tonicha', lastName: 'Crowther', age: 45 }],
+    [1002, { firstName: 'Samual', lastName: 'Sierra', age: 29 }],
+    [1003, { firstName: 'Khushi', lastName: 'Walter', age: 40 }],
+    [1004, { firstName: 'Rian', lastName: 'Ruiz', age: 56 }],
+  ],
+  edges: [
+    [0, { from: 1001, to: 1002, data: { items: [2, 3] } }],
+    [1, { from: 1002, to: 1003, data: { items: [4] } }],
+    [2, { from: 1001, to: 1003, data: { items: [9, 4, 3] } }],
+    [3, { from: 1003, to: 1004, data: { items: [2, 3] } }],
+  ],
+});
 ```
 
 ### Debug graph visually
 
 ```ts
-// examples/debug-visually.ts
-
-import * as G from '../src';
-import * as O from 'fp-ts/Option';
-import { flow, pipe } from 'fp-ts/function';
-
-// We import our graph from the previous section
-import { myGraph } from './build-graph';
-
-pipe(
-  myGraph,
-
-  // We need to map over the graph as it may be invalid
-  O.map(
-    flow(
-      // Then turn the edges into strings
-      G.mapEdge(({ items }) => items.join(', ')),
-
-      // The same we do with the nodes
-      G.map(
-        ({ firstName, lastName, age }) => `${lastName}, ${firstName} (${age})`
-      ),
-
-      // For debugging, we generate a simple dot file
-      G.toDotFile((_) => _.toString())
-    )
-  ),
-
-  // Depending on if the graph was valid
-  O.fold(
-    // We either print an error
-    () => console.error('invalid graph!'),
-
-    // Or output the dot file
-    console.log
-  )
-);
+...
 ```
 
 If you have [graphviz](https://graphviz.org) installed you can run the following in the terminal:

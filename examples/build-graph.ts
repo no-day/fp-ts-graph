@@ -16,11 +16,9 @@ type Edge = { items: number[] };
 
 type Config = typeof config;
 
-export type MyGraph = Graph<Config, Id, Edge, Node>
+export type MyGraph = Graph<Config, Id, Edge, Node>;
 
-export const myGraph: Either<G.Error, MyGraph> = G.fromEntries(
-  config
-)({
+export const myGraph: Either<G.Error, MyGraph> = G.fromEntries(config)({
   nodes: [
     [1001, { firstName: 'Tonicha', lastName: 'Crowther', age: 45 }],
     [1002, { firstName: 'Samual', lastName: 'Sierra', age: 29 }],
