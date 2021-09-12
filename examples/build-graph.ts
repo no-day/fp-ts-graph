@@ -1,51 +1,36 @@
-import Graph, * as G from '../src';
-import * as N from 'fp-ts/number';
-import { pipe } from 'fp-ts/function';
-import * as O from 'fp-ts/Option';
-import { Option } from 'fp-ts/Option';
+import * as G from 'Graph';
+import { Graph } from 'Graph';
+import { Either } from 'fp-ts/Either';
 
-// We import our types from the previous section
-import { MyEdge, MyId, MyNode, MyGraph } from './types';
+const config = {
+  directed: true,
+  multiEdge: false,
+  cyclic: false,
+};
 
-// To save some writing, we define partially applied versions of the builder functions
+type Id = number;
 
-const empty = G.empty<MyId, MyEdge, MyNode>();
-const insertNode = G.insertNode(N.Eq);
-const insertEdge = G.insertEdge(N.Eq);
+type Node = { firstName: string; lastName: string; age: number };
 
-// Then, let's fill the graph with Data.
+type Edge = { items: number[] };
 
-export const myGraph: Option<MyGraph> = pipe(
-  // We start out with and empty graph.
-  empty,
+type Config = typeof config;
 
-  // And add some nodes to it.
-  insertNode(1001, {
-    firstName: 'Tonicha',
-    lastName: 'Crowther',
-    age: 45,
-  }),
-  insertNode(1002, {
-    firstName: 'Samual',
-    lastName: 'Sierra',
-    age: 29,
-  }),
-  insertNode(1003, {
-    firstName: 'Khushi',
-    lastName: 'Walter',
-    age: 40,
-  }),
-  insertNode(1004, {
-    firstName: 'Rian',
-    lastName: 'Ruiz',
-    age: 56,
-  }),
+export type MyGraph = Graph<Config, Id, Edge, Node>
 
-  // Then we connect them with edges, which can have data, too
-
-  O.of,
-  O.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  O.chain(insertEdge(1002, 1003, { items: [4] })),
-  O.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  O.chain(insertEdge(1003, 1004, { items: [2, 3] }))
-);
+export const myGraph: Either<G.Error, MyGraph> = G.fromEntries(
+  config
+)({
+  nodes: [
+    [1001, { firstName: 'Tonicha', lastName: 'Crowther', age: 45 }],
+    [1002, { firstName: 'Samual', lastName: 'Sierra', age: 29 }],
+    [1003, { firstName: 'Khushi', lastName: 'Walter', age: 40 }],
+    [1004, { firstName: 'Rian', lastName: 'Ruiz', age: 56 }],
+  ],
+  edges: [
+    [0, { from: 1001, to: 1002, data: { items: [2, 3] } }],
+    [1, { from: 1002, to: 1003, data: { items: [4] } }],
+    [2, { from: 1001, to: 1003, data: { items: [9, 4, 3] } }],
+    [3, { from: 1003, to: 1004, data: { items: [2, 3] } }],
+  ],
+});
