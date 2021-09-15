@@ -155,7 +155,6 @@ import { myGraph } from './build-graph';
 // We import Id codec
 import { MyIdCodec } from './types';
 
-
 pipe(
   myGraph,
 

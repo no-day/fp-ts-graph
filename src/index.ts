@@ -4,12 +4,11 @@ import { pipe } from 'fp-ts/function';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
-import * as R from 'fp-ts/Record';
-import * as S from 'fp-ts/Set';
-import * as str from 'fp-ts/string';
 import * as Cod from 'io-ts/Codec';
 import * as Dec from 'io-ts/Decoder';
 import * as Enc from 'io-ts/Encoder';
+import { Map, Set } from 'immutable';
+import * as IM from './ImmutableMap';
 
 // -----------------------------------------------------------------------------
 // model
@@ -23,15 +22,15 @@ import * as Enc from 'io-ts/Encoder';
  * - `Node` is the data/label attached to a node
  * - `Edge` is the data/label attached to a an edge
  * - `nodes` key is encoded `Id` to `string` using 'io-ts/Encoder'
- * - `edges` outer key is encoded from node `Id`, inner `Record` key is encoded to node `Id`
+ * - `edges` outer key is encoded from node `Id`, inner `Map` key is encoded to node `Id`
  *
  * @since 0.1.0
  * @category Model
  */
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol;
-  readonly nodes: Record<string, NodeContext<Node>>;
-  readonly edges: Record<string, Record<string, Edge>>;
+  readonly nodes: Map<string, NodeContext<Node>>;
+  readonly edges: Map<string, Map<string, Edge>>;
 }
 
 export {
@@ -78,8 +77,8 @@ type NodeContext<Node> = {
  */
 export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
   unsafeMkGraph({
-    nodes: {},
-    edges: {},
+    nodes: Map<string, NodeContext<Node>>(),
+    edges: Map<string, Map<string, Edge>>(),
   });
 
 // -----------------------------------------------------------------------------
@@ -119,7 +118,7 @@ export const insertNode =
     unsafeMkGraph({
       nodes: pipe(
         graph.nodes,
-        R.modifyAt(E.encode(id), ({ incoming, outgoing }) => ({
+        IM.modifyAt(E)(id, ({ incoming, outgoing }) => ({
           incoming,
           outgoing,
           data,
@@ -127,10 +126,10 @@ export const insertNode =
         O.getOrElse(() =>
           pipe(
             graph.nodes,
-            R.upsertAt(E.encode(id), {
+            IM.upsertAt(E)(id, {
               data,
-              incoming: S.empty as Set<string>,
-              outgoing: S.empty as Set<string>,
+              incoming: Set<string>(),
+              outgoing: Set<string>(),
             })
           )
         )
@@ -199,7 +198,7 @@ export const mapEdge =
   <Id, Node>(graph: Graph<Id, Edge1, Node>): Graph<Id, Edge2, Node> =>
     unsafeMkGraph({
       nodes: graph.nodes,
-      edges: pipe(graph.edges, R.map(R.map(fn))),
+      edges: graph.edges.map((from) => from.map(fn)),
     });
 
 /**
@@ -213,8 +212,7 @@ export const mapNode =
   <Id, Edge>(graph: Graph<Id, Edge, Node1>): Graph<Id, Edge, Node2> =>
     unsafeMkGraph({
       nodes: pipe(
-        graph.nodes,
-        R.map(({ incoming, outgoing, data }) => ({
+        graph.nodes.map(({ incoming, outgoing, data }) => ({
           incoming,
           outgoing,
           data: fn(data),
@@ -243,12 +241,12 @@ export const modifyAtEdge =
   <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.edges,
-      R.lookup(E.encode(from)),
-      O.chain(R.modifyAt(E.encode(to), update)),
+      IM.lookup(E)(from),
+      O.chain(IM.modifyAt(E)(to, update)),
       O.chain((updatedTo) =>
         pipe(
           graph.edges,
-          R.modifyAt(E.encode(from), () => updatedTo)
+          IM.modifyAt(E)(from, () => updatedTo)
         )
       ),
       O.map((edges) => unsafeMkGraph({ nodes: graph.nodes, edges }))
@@ -266,7 +264,7 @@ export const modifyAtNode =
   <Edge>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.nodes,
-      R.modifyAt(E.encode(id), ({ incoming, outgoing, data }) => ({
+      IM.modifyAt(E)(id, ({ incoming, outgoing, data }) => ({
         incoming,
         outgoing,
         data: update(data),
@@ -309,11 +307,7 @@ export const lookupEdge =
   <Id>(E: Enc.Encoder<string, Id>) =>
   (from: Id, to: Id) =>
   <Edge>(graph: Graph<Id, Edge, unknown>): O.Option<Edge> =>
-    pipe(
-      graph.edges,
-      R.lookup(E.encode(from)),
-      O.chain(R.lookup(E.encode(to)))
-    );
+    pipe(graph.edges, IM.lookup(E)(from), O.chain(IM.lookup(E)(to)));
 
 /**
  * Retrieves a node from the graph.
@@ -345,7 +339,7 @@ export const lookupNode =
   <Node>(graph: Graph<Id, unknown, Node>): O.Option<Node> =>
     pipe(
       graph.nodes,
-      R.lookup(E.encode(id)),
+      IM.lookup(E)(id),
       O.map((node) => node.data)
     );
 
@@ -363,8 +357,7 @@ export const nodeEntries =
   <Id>(D: Dec.Decoder<string, Id>) =>
   <Edge, Node>(graph: Graph<Id, Edge, Node>): [Id, Node][] =>
     pipe(
-      graph.nodes,
-      R.map((_) => _.data),
+      graph.nodes.map((_) => _.data),
       mapEntries<Id>(D)
     );
 
@@ -379,15 +372,14 @@ export const edgeEntries =
   <Id>(D: Dec.Decoder<string, Id>) =>
   <Edge, Node>(graph: Graph<Id, Edge, Node>): [Direction<Id>, Edge][] =>
     pipe(
-      graph.edges,
-      R.toArray,
-      A.chain(([encodedFrom, toRecord]) =>
+      graph.edges.toArray(),
+      A.chain(([encodedFrom, toMap]) =>
         pipe(
           encodedFrom,
           D.decode,
           E.map((from) =>
             pipe(
-              toRecord,
+              toMap,
               mapEntries(D),
               A.map(([to, edge]) => <[Direction<Id>, Edge]>[{ from, to }, edge])
             )
@@ -459,10 +451,9 @@ const unsafeMkGraph = <Id, Edge, Node>(
 
 const mapEntries =
   <Id>(decoder: Dec.Decoder<string, Id>) =>
-  <V>(map_: Record<string, V>): [Id, V][] =>
+  <V>(map_: Map<string, V>): [Id, V][] =>
     pipe(
-      map_,
-      R.toArray,
+      map_.toArray(),
       A.traverse(E.Applicative)(([encodedKey, value]) =>
         pipe(
           encodedKey,
@@ -479,7 +470,7 @@ const insertIncoming =
   <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
     outgoing: nodeContext.outgoing,
-    incoming: pipe(nodeContext.incoming, S.insert(str.Eq)(E.encode(from))),
+    incoming: nodeContext.incoming.add(E.encode(from)),
   });
 
 const insertOutgoing =
@@ -487,7 +478,7 @@ const insertOutgoing =
   (from: Id) =>
   <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
-    outgoing: pipe(nodeContext.outgoing, S.insert(str.Eq)(E.encode(from))),
+    outgoing: nodeContext.outgoing.add(E.encode(from)),
     incoming: nodeContext.outgoing,
   });
 
@@ -499,8 +490,8 @@ const modifyEdgeInNodes =
   ): O.Option<Graph<Id, unknown, Node>['nodes']> =>
     pipe(
       nodes,
-      R.modifyAt(E.encode(from), insertOutgoing(E)(to)),
-      O.chain(R.modifyAt(E.encode(to), insertIncoming(E)(from)))
+      IM.modifyAt(E)(from, insertOutgoing(E)(to)),
+      O.chain(IM.modifyAt(E)(to, insertIncoming(E)(from)))
     );
 
 const insertEdgeInEdges =
@@ -511,8 +502,8 @@ const insertEdgeInEdges =
   ): Graph<Id, Edge, unknown>['edges'] =>
     pipe(
       edges,
-      R.lookup(E.encode(from)),
-      O.getOrElse(() => <Record<string, Edge>>{}),
-      R.upsertAt(E.encode(to), data),
-      (toRecord) => R.upsertAt(E.encode(from), toRecord)(edges)
+      IM.lookup(E)(from),
+      O.getOrElse(() => Map<string, Edge>()),
+      IM.upsertAt(E)(to, data),
+      (toMap) => IM.upsertAt(E)(from, toMap)(edges)
     );
