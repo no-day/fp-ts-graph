@@ -22,7 +22,7 @@ export const MyIdCodec: Codec<string, string, MyId> = {
     pipe(
       Number(i),
       E.fromPredicate(
-        (parsed: number) => !isNaN(parsed),
+        (parsed: number) => !isNaN(parsed) && i.length > 0,
         () => Dec.error(i, `${i} is not a number`)
       )
     ),
