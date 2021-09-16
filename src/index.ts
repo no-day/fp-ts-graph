@@ -4,9 +4,10 @@ import { pipe } from 'fp-ts/function';
 import * as A from 'fp-ts/Array';
 import * as E from 'fp-ts/Either';
 import * as O from 'fp-ts/Option';
-import * as Cod from 'io-ts/Codec';
-import * as Dec from 'io-ts/Decoder';
-import * as Enc from 'io-ts/Encoder';
+import { Option } from 'fp-ts/Option';
+import { Codec } from 'io-ts/Codec';
+import { Decoder } from 'io-ts/Decoder';
+import { Encoder } from 'io-ts/Encoder';
 import { Map, Set } from 'immutable';
 import * as IM from './ImmutableMap';
 
@@ -112,7 +113,7 @@ export const empty = <Id, Edge, Node>(): Graph<Id, Edge, Node> =>
  *   assert.deepStrictEqual(pipe(myGraph, G.edgeEntries(C.string)), []);
  */
 export const insertNode =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   <Node>(id: Id, data: Node) =>
   <Edge>(graph: Graph<Id, Edge, Node>): Graph<Id, Edge, Node> =>
     unsafeMkGraph({
@@ -173,9 +174,9 @@ export const insertNode =
  *   );
  */
 export const insertEdge =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, data: Edge) =>
-  <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
+  <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.nodes,
       modifyEdgeInNodes(E)(from, to),
@@ -236,9 +237,9 @@ export const map = mapNode;
  * @category Combinators
  */
 export const modifyAtEdge =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, update: (e: Edge) => Edge) =>
-  <Node>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
+  <Node>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.edges,
       IM.lookup(E)(from),
@@ -259,9 +260,9 @@ export const modifyAtEdge =
  * @category Combinators
  */
 export const modifyAtNode =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   <Node>(id: Id, update: (n: Node) => Node) =>
-  <Edge>(graph: Graph<Id, Edge, Node>): O.Option<Graph<Id, Edge, Node>> =>
+  <Edge>(graph: Graph<Id, Edge, Node>): Option<Graph<Id, Edge, Node>> =>
     pipe(
       graph.nodes,
       IM.modifyAt(E)(id, ({ incoming, outgoing, data }) => ({
@@ -304,9 +305,9 @@ export const modifyAtNode =
  *   );
  */
 export const lookupEdge =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   (from: Id, to: Id) =>
-  <Edge>(graph: Graph<Id, Edge, unknown>): O.Option<Edge> =>
+  <Edge>(graph: Graph<Id, Edge, unknown>): Option<Edge> =>
     pipe(graph.edges, IM.lookup(E)(from), O.chain(IM.lookup(E)(to)));
 
 /**
@@ -334,9 +335,9 @@ export const lookupEdge =
  *   );
  */
 export const lookupNode =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   (id: Id) =>
-  <Node>(graph: Graph<Id, unknown, Node>): O.Option<Node> =>
+  <Node>(graph: Graph<Id, unknown, Node>): Option<Node> =>
     pipe(
       graph.nodes,
       IM.lookup(E)(id),
@@ -354,7 +355,7 @@ export const lookupNode =
  * @category Destructors
  */
 export const nodeEntries =
-  <Id>(D: Dec.Decoder<string, Id>) =>
+  <Id>(D: Decoder<string, Id>) =>
   <Edge, Node>(graph: Graph<Id, Edge, Node>): [Id, Node][] =>
     pipe(
       graph.nodes.map((_) => _.data),
@@ -369,7 +370,7 @@ export const nodeEntries =
  * @category Destructors
  */
 export const edgeEntries =
-  <Id>(D: Dec.Decoder<string, Id>) =>
+  <Id>(D: Decoder<string, Id>) =>
   <Edge, Node>(graph: Graph<Id, Edge, Node>): [Direction<Id>, Edge][] =>
     pipe(
       graph.edges.toArray(),
@@ -394,7 +395,7 @@ export const edgeEntries =
  * @category Destructors
  */
 export const entries =
-  <Id>(C: Cod.Codec<string, string, Id>) =>
+  <Id>(C: Codec<string, string, Id>) =>
   <Edge, Node>(
     graph: Graph<Id, Edge, Node>
   ): { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] } => ({
@@ -420,7 +421,7 @@ export const entries =
  * @category Debug
  */
 export const toDotFile =
-  <Id>(D: Dec.Decoder<string, Id>) =>
+  <Id>(D: Decoder<string, Id>) =>
   (printId: (id: Id) => string) =>
   (graph: Graph<Id, string, string>): string =>
     pipe(
@@ -450,7 +451,7 @@ const unsafeMkGraph = <Id, Edge, Node>(
 ): Graph<Id, Edge, Node> => graphData as Graph<Id, Edge, Node>;
 
 const mapEntries =
-  <Id>(decoder: Dec.Decoder<string, Id>) =>
+  <Id>(decoder: Decoder<string, Id>) =>
   <V>(map_: Map<string, V>): [Id, V][] =>
     pipe(
       map_.toArray(),
@@ -465,7 +466,7 @@ const mapEntries =
     );
 
 const insertIncoming =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   (from: Id) =>
   <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
@@ -474,7 +475,7 @@ const insertIncoming =
   });
 
 const insertOutgoing =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   (from: Id) =>
   <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
@@ -483,11 +484,11 @@ const insertOutgoing =
   });
 
 const modifyEdgeInNodes =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   (from: Id, to: Id) =>
   <Node>(
     nodes: Graph<Id, unknown, Node>['nodes']
-  ): O.Option<Graph<Id, unknown, Node>['nodes']> =>
+  ): Option<Graph<Id, unknown, Node>['nodes']> =>
     pipe(
       nodes,
       IM.modifyAt(E)(from, insertOutgoing(E)(to)),
@@ -495,7 +496,7 @@ const modifyEdgeInNodes =
     );
 
 const insertEdgeInEdges =
-  <Id>(E: Enc.Encoder<string, Id>) =>
+  <Id>(E: Encoder<string, Id>) =>
   <Edge>(from: Id, to: Id, data: Edge) =>
   (
     edges: Graph<Id, Edge, unknown>['edges']
