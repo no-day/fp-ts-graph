@@ -19,22 +19,22 @@ export const myGraph: Option<MyGraph> = pipe(
   empty,
 
   // And add some nodes to it.
-  insertNode(1001, {
+  insertNode('TC', {
     firstName: 'Tonicha',
     lastName: 'Crowther',
     age: 45,
   }),
-  insertNode(1002, {
+  insertNode('SS', {
     firstName: 'Samual',
     lastName: 'Sierra',
     age: 29,
   }),
-  insertNode(1003, {
+  insertNode('KW', {
     firstName: 'Khushi',
     lastName: 'Walter',
     age: 40,
   }),
-  insertNode(1004, {
+  insertNode('RR', {
     firstName: 'Rian',
     lastName: 'Ruiz',
     age: 56,
@@ -43,8 +43,8 @@ export const myGraph: Option<MyGraph> = pipe(
   // Then we connect them with edges, which can have data, too
 
   O.of,
-  O.chain(insertEdge(1001, 1002, { items: [2, 3] })),
-  O.chain(insertEdge(1002, 1003, { items: [4] })),
-  O.chain(insertEdge(1001, 1003, { items: [9, 4, 3] })),
-  O.chain(insertEdge(1003, 1004, { items: [2, 3] }))
+  O.chain(insertEdge('TC', 'SS', { items: [2, 3] })),
+  O.chain(insertEdge('SS', 'KW', { items: [4] })),
+  O.chain(insertEdge('TC', 'KW', { items: [9, 4, 3] })),
+  O.chain(insertEdge('KW', 'RR', { items: [2, 3] }))
 );
