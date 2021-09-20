@@ -1,6 +1,6 @@
 ---
 title: index.ts
-nav_order: 1
+nav_order: 2
 parent: Modules
 ---
 
@@ -28,8 +28,6 @@ Added in v0.1.0
   - [edgeEntries](#edgeentries)
   - [entries](#entries)
   - [nodeEntries](#nodeentries)
-- [Instances](#instances)
-  - [getEqEdgeId](#geteqedgeid)
 - [Model](#model)
   - [Direction (type alias)](#direction-type-alias)
   - [Graph (interface)](#graph-interface)
@@ -51,7 +49,7 @@ the specified start and end node id do exists in the graph.
 
 ```ts
 export declare const insertEdge: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => <Edge>(from: Id, to: Id, data: Edge) => <Node>(graph: Graph<Id, Edge, Node>) => O.Option<Graph<Id, Edge, Node>>
 ```
 
@@ -61,18 +59,18 @@ export declare const insertEdge: <Id>(
 import Graph, * as G from '@no-day/fp-ts-graph'
 import { pipe } from 'fp-ts/function'
 import * as O from 'fp-ts/Option'
-import * as S from 'fp-ts/string'
+import * as C from 'io-ts/Codec'
 
 type MyGraph = Graph<string, string, string>
 
 const myGraph: MyGraph = pipe(
   G.empty<string, string, string>(),
-  G.insertNode(S.Eq)('n1', 'Node 1'),
-  G.insertNode(S.Eq)('n2', 'Node 2')
+  G.insertNode(C.string)('n1', 'Node 1'),
+  G.insertNode(C.string)('n2', 'Node 2')
 )
 
 assert.deepStrictEqual(
-  pipe(myGraph, G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1'), O.map(G.entries)),
+  pipe(myGraph, G.insertEdge(C.string)('n1', 'n2', 'Edge 1'), O.map(G.entries(C.string))),
   O.some({
     nodes: [
       ['n1', 'Node 1'],
@@ -94,7 +92,7 @@ the graph, the data is replaced.
 
 ```ts
 export declare const insertNode: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => <Node>(id: Id, data: Node) => <Edge>(graph: Graph<Id, Edge, Node>) => Graph<Id, Edge, Node>
 ```
 
@@ -103,17 +101,22 @@ export declare const insertNode: <Id>(
 ```ts
 import * as G from '@no-day/fp-ts-graph'
 import { pipe } from 'fp-ts/function'
-import * as N from 'fp-ts/number'
+import * as C from 'io-ts/Codec'
 
-const myGraph = pipe(G.empty<number, unknown, string>(), G.insertNode(N.Eq)(54, 'n1'), G.insertNode(N.Eq)(3, 'n2'))
+const myGraph = pipe(
+  G.empty<string, unknown, string>(),
+  G.insertNode(C.string)('54', 'n1'),
+  G.insertNode(C.string)('3', 'n2')
+)
 
-assert.deepStrictEqual(pipe(myGraph, G.entries), {
-  nodes: [
-    [54, 'n1'],
-    [3, 'n2'],
-  ],
-  edges: [],
-})
+assert.deepStrictEqual(
+  pipe(myGraph, G.nodeEntries(C.string), (ent) => new Set(ent)),
+  new Set([
+    ['54', 'n1'],
+    ['3', 'n2'],
+  ])
+)
+assert.deepStrictEqual(pipe(myGraph, G.edgeEntries(C.string)), [])
 ```
 
 Added in v0.1.0
@@ -168,7 +171,7 @@ Modifies a single edge in the graph.
 
 ```ts
 export declare const modifyAtEdge: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => <Edge>(
   from: Id,
   to: Id,
@@ -186,7 +189,7 @@ Modifies a single node in the graph.
 
 ```ts
 export declare const modifyAtNode: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => <Node>(
   id: Id,
   update: (n: Node) => Node
@@ -239,7 +242,9 @@ function that stringifies the ids.
 **Signature**
 
 ```ts
-export declare const toDotFile: <Id>(printId: (id: Id) => string) => (graph: Graph<Id, string, string>) => string
+export declare const toDotFile: <Id>(
+  D: Decoder<string, Id>
+) => (printId: (id: Id) => string) => (graph: Graph<Id, string, string>) => string
 ```
 
 Added in v0.1.0
@@ -254,7 +259,9 @@ supported, we use node connections as edge ids.
 **Signature**
 
 ```ts
-export declare const edgeEntries: <Id, Edge, Node>(graph: Graph<Id, Edge, Node>) => [Direction<Id>, Edge][]
+export declare const edgeEntries: <Id>(
+  D: Decoder<string, Id>
+) => <Edge, Node>(graph: Graph<Id, Edge, Node>) => [Direction<Id>, Edge][]
 ```
 
 Added in v0.1.0
@@ -264,9 +271,9 @@ Added in v0.1.0
 **Signature**
 
 ```ts
-export declare const entries: <Id, Edge, Node>(
-  graph: Graph<Id, Edge, Node>
-) => { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] }
+export declare const entries: <Id>(
+  C: Codec<string, string, Id>
+) => <Edge, Node>(graph: Graph<Id, Edge, Node>) => { nodes: [Id, Node][]; edges: [Direction<Id>, Edge][] }
 ```
 
 Added in v0.1.0
@@ -278,19 +285,9 @@ Get nodes as "id"-"value" pairs
 **Signature**
 
 ```ts
-export declare const nodeEntries: <Id, Edge, Node>(graph: Graph<Id, Edge, Node>) => [Id, Node][]
-```
-
-Added in v0.1.0
-
-# Instances
-
-## getEqEdgeId
-
-**Signature**
-
-```ts
-export declare const getEqEdgeId: <Id>(E: Eq<Id>) => Eq<Direction<Id>>
+export declare const nodeEntries: <Id>(
+  D: Decoder<string, Id>
+) => <Edge, Node>(graph: Graph<Id, Edge, Node>) => [Id, Node][]
 ```
 
 Added in v0.1.0
@@ -317,14 +314,16 @@ but those details may become opaque in the future.
 - Id means `Id` of a node,
 - `Node` is the data/label attached to a node
 - `Edge` is the data/label attached to a an edge
+- `nodes` key is encoded `Id` to `string` using 'io-ts/Encoder'
+- `edges` outer key is encoded from node `Id`, inner `Map` key is encoded to node `Id`
 
 **Signature**
 
 ```ts
 export interface Graph<Id, Edge, Node> {
   readonly _brand: unique symbol
-  readonly nodes: Map<Id, NodeContext<Id, Node>>
-  readonly edges: Map<Direction<Id>, Edge>
+  readonly nodes: Map<string, NodeContext<Node>>
+  readonly edges: Map<string, Map<string, Edge>>
 }
 ```
 
@@ -350,7 +349,7 @@ Retrieves an edge from the graph.
 
 ```ts
 export declare const lookupEdge: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => (from: Id, to: Id) => <Edge>(graph: Graph<Id, Edge, unknown>) => O.Option<Edge>
 ```
 
@@ -359,21 +358,21 @@ export declare const lookupEdge: <Id>(
 ```ts
 import Graph, * as G from '@no-day/fp-ts-graph'
 import { pipe } from 'fp-ts/function'
-import * as S from 'fp-ts/string'
 import * as O from 'fp-ts/Option'
+import * as C from 'io-ts/Codec'
 
 type MyGraph = Graph<string, string, string>
 
 const myGraph: MyGraph = pipe(
   G.empty<string, string, string>(),
-  G.insertNode(S.Eq)('n1', 'Node 1'),
-  G.insertNode(S.Eq)('n2', 'Node 2'),
+  G.insertNode(C.string)('n1', 'Node 1'),
+  G.insertNode(C.string)('n2', 'Node 2'),
   O.of,
-  O.chain(G.insertEdge(S.Eq)('n1', 'n2', 'Edge 1')),
+  O.chain(G.insertEdge(C.string)('n1', 'n2', 'Edge 1')),
   O.getOrElse(() => G.empty<string, string, string>())
 )
 
-assert.deepStrictEqual(pipe(myGraph, G.lookupEdge(S.Eq)('n1', 'n2')), O.some('Edge 1'))
+assert.deepStrictEqual(pipe(myGraph, G.lookupEdge(C.string)('n1', 'n2')), O.some('Edge 1'))
 ```
 
 Added in v0.2.0
@@ -386,7 +385,7 @@ Retrieves a node from the graph.
 
 ```ts
 export declare const lookupNode: <Id>(
-  E: Eq<Id>
+  E: Encoder<string, Id>
 ) => (id: Id) => <Node>(graph: Graph<Id, unknown, Node>) => O.Option<Node>
 ```
 
@@ -395,18 +394,18 @@ export declare const lookupNode: <Id>(
 ```ts
 import Graph, * as G from '@no-day/fp-ts-graph'
 import { pipe } from 'fp-ts/function'
-import * as S from 'fp-ts/string'
 import * as O from 'fp-ts/Option'
+import * as C from 'io-ts/Codec'
 
 type MyGraph = Graph<string, string, string>
 
 const myGraph: MyGraph = pipe(
   G.empty<string, string, string>(),
-  G.insertNode(S.Eq)('n1', 'Node 1'),
-  G.insertNode(S.Eq)('n2', 'Node 2')
+  G.insertNode(C.string)('n1', 'Node 1'),
+  G.insertNode(C.string)('n2', 'Node 2')
 )
 
-assert.deepStrictEqual(pipe(myGraph, G.lookupNode(S.Eq)('n2')), O.some('Node 2'))
+assert.deepStrictEqual(pipe(myGraph, G.lookupNode(C.string)('n2')), O.some('Node 2'))
 ```
 
 Added in v0.2.0
