@@ -207,6 +207,42 @@ describe('index', () => {
         fp.option.none
       );
     });
+
+    it('prevents regression of incorrect incoming nodes', () =>
+      deepStrictEqual(
+        fp.function.pipe(
+          graph.empty<string, string, string>(),
+          graph.insertNode(Codec.string)('n1', 'Node 1'),
+          graph.insertNode(Codec.string)('n2', 'Node 2'),
+          graph.insertNode(Codec.string)('n3', 'Node 3'),
+          graph.insertNode(Codec.string)('n4', 'Node 4'),
+          graph.insertNode(Codec.string)('n5', 'Node 5'),
+          fp.option.of,
+          fp.option.chain(graph.insertEdge(Codec.string)('n3', 'n1', 'Edge 1')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n3', 'n2', 'Edge 2')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n4', 'n3', 'Edge 3')),
+          fp.option.chain(graph.insertEdge(Codec.string)('n5', 'n3', 'Edge 3')),
+          fp.option.chain(g =>
+            fp.function.pipe(
+              g.nodes.get(Codec.string.encode('n3'), null),
+              fp.option.fromNullable
+            )
+          ),
+          fp.option.map(
+            node => ({
+              data: node.data,
+              incoming: node.incoming.toArray().sort(),
+              outgoing: node.outgoing.toArray().sort()
+            })
+          )
+        )
+        , fp.option.of({
+          data: 'Node 3',
+          incoming: ['n4', 'n5'],
+          outgoing: ['n1', 'n2']
+        }))
+    );
+
   });
 
   describe('mapEdge', () => {
