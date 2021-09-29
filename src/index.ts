@@ -476,11 +476,11 @@ const insertIncoming =
 
 const insertOutgoing =
   <Id>(E: Encoder<string, Id>) =>
-  (from: Id) =>
+  (to: Id) =>
   <Node>(nodeContext: NodeContext<Node>): NodeContext<Node> => ({
     data: nodeContext.data,
-    outgoing: nodeContext.outgoing.add(E.encode(from)),
-    incoming: nodeContext.outgoing,
+    outgoing: nodeContext.outgoing.add(E.encode(to)),
+    incoming: nodeContext.incoming,
   });
 
 const modifyEdgeInNodes =
