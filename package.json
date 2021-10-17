@@ -30,7 +30,8 @@
     "prepublish": "yarn build",
     "docs": "yarn docs-ts",
     "test": "yarn jest",
-    "pretty": "yarn run prettier --check .",
+    "check-format": "yarn run prettier --check .",
+    "format": "yarn run prettier --write .",
     "doctoc": "yarn doctoc"
   },
   "dependencies": {}
