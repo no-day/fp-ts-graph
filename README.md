@@ -2,7 +2,6 @@
 
 Immutable, functional graph data structure for [fp-ts](https://github.com/gcanti/fp-ts).
 
-
 ### Table of Contents
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
