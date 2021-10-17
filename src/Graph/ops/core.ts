@@ -1,6 +1,7 @@
+import { Ids } from 'Graph';
 import { Config, Graph } from 'Graph/type';
 
 export const empty =
-  <Cfg extends Config>(config: Cfg) =>
-  <Id, Edge, Node>(): Graph<Cfg, Id, Edge, Node> =>
+  <C extends Config>(config: C) =>
+  <N, E, I extends Ids>(): Graph<N, E, C, I> =>
     'TODO' as any;

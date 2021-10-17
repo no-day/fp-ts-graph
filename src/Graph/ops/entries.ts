@@ -1,19 +1,26 @@
 import { Either } from 'fp-ts/Either';
 import { Config, Graph } from 'Graph/type';
 import { Error } from 'Graph/Error';
+import { Ids } from 'Graph';
 
-export type Entries<Id, Edge, Node> = {
-  nodes: [Id, Node][];
-  edges: [Id, { from: Id; to: Id; data: Edge }][];
+export type EdgeEntry<E, I extends Ids> = {
+  from: I['node'];
+  to: I['node'];
+  data: E;
+};
+
+export type Entries<N, E, I extends Ids> = {
+  nodes: [I['node'], Node][];
+  edges: [I['edge'], EdgeEntry<E, I>][];
 };
 
 export const fromEntries =
-  <Cfg extends Config>(config: Cfg) =>
-  <Id, Edge, Node>(
-    entries: Entries<Id, Edge, Node>
-  ): Either<Error, Graph<Cfg, Id, Edge, Node>> =>
+  <C extends Config>(config: Cfg) =>
+  <N, E, I extends Ids>(
+    entries: Entries<N, E, I>
+  ): Either<Error, Graph<N, E, C, I>> =>
     'TODO' as any;
 
-export const toEntries = <Cfg extends Config, Id, Edge, Node>(
-  graph: Graph<Cfg, Id, Edge, Node>
-): Entries<Id, Edge, Node> => 'TODO' as any;
+export const toEntries = <C extends Config, I extends Ids, E, N>(
+  graph: Graph<N, E, C, I>
+): Entries<N, E, I> => 'TODO' as any;
