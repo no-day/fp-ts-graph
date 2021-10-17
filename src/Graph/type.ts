@@ -1,5 +1,6 @@
 import { Either } from 'fp-ts/Either';
 import { ConnectionRecord } from 'ConnectionRecord';
+import { string } from 'fp-ts';
 
 type InternalEdgeId = string;
 
@@ -11,21 +12,27 @@ export type Config = {
   cyclic: boolean;
 };
 
-export type Ids<NodeId = unknown, EdgeId = unknown> = {
-  node: NodeId;
-  edge: EdgeId;
+export type DefaultConfig = {
+  directed: false;
+  multiEdge: false;
+  cyclic: false;
+};
+
+export type Ids<nodeId = string, edgeId = string> = {
+  node: nodeId;
+  edge: edgeId;
 };
 
 export type DefaultIds = {
-  nodeId: InternalNodeId;
-  edgeId: InternalEdgeId;
+  node: InternalNodeId;
+  edge: InternalEdgeId;
 };
 
 export interface Graph<
-  node,
-  edge,
-  cfg extends Config,
-  ids extends Ids<any, any> = DefaultIds
+  node = unknown,
+  edge = unknown,
+  cfg extends Config = DefaultConfig,
+  ids extends Ids = DefaultIds
 > {
   readonly _brand: unique symbol;
   readonly _cfg: cfg;
